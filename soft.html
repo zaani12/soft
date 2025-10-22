@@ -1,0 +1,1904 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Soft Skills Quest - Interactive Learning Game</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;800&display=swap');
+        
+        * {
+            font-family: 'Poppins', sans-serif;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        
+        @keyframes slideInRight {
+            from { transform: translateX(100%) scale(0.9); opacity: 0; }
+            to { transform: translateX(0) scale(1); opacity: 1; }
+        }
+        
+        @keyframes slideInLeft {
+            from { transform: translateX(-100%) scale(0.9); opacity: 0; }
+            to { transform: translateX(0) scale(1); opacity: 1; }
+        }
+        
+        @keyframes slideInUp {
+            from { transform: translateY(50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0) scale(1); }
+            25% { transform: translateY(-30px) scale(1.1); }
+            50% { transform: translateY(-15px) scale(1.05); }
+            75% { transform: translateY(-5px) scale(1.02); }
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 0.4; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.05); }
+        }
+        
+        @keyframes float {
+            0% { transform: translateY(0) translateX(0) scale(0); opacity: 0; }
+            10% { opacity: 1; transform: scale(1); }
+            90% { opacity: 1; }
+            100% { transform: translateY(-150px) translateX(30px) scale(0.5) rotate(360deg); opacity: 0; }
+        }
+        
+        @keyframes shimmer {
+            0% { background-position: -1000px 0; }
+            100% { background-position: 1000px 0; }
+        }
+        
+        @keyframes glow {
+            0%, 100% { box-shadow: 0 0 20px rgba(251, 191, 36, 0.5), 0 0 40px rgba(251, 191, 36, 0.3); }
+            50% { box-shadow: 0 0 30px rgba(251, 191, 36, 0.8), 0 0 60px rgba(251, 191, 36, 0.5); }
+        }
+        
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        
+        @keyframes wiggle {
+            0%, 100% { transform: rotate(-3deg); }
+            50% { transform: rotate(3deg); }
+        }
+        
+        @keyframes confetti {
+            0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+        }
+        
+        @keyframes ripple {
+            0% { transform: scale(0); opacity: 1; }
+            100% { transform: scale(4); opacity: 0; }
+        }
+        
+        .animate-fadeIn {
+            animation: fadeIn 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+        
+        .animate-slideInRight {
+            animation: slideInRight 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+        
+        .animate-slideInLeft {
+            animation: slideInLeft 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+        
+        .animate-slideInUp {
+            animation: slideInUp 0.5s ease-out;
+        }
+        
+        .animate-bounce-custom {
+            animation: bounce 1s ease-in-out;
+        }
+        
+        .animate-pulse-custom {
+            animation: pulse 2s infinite ease-in-out;
+        }
+        
+        .animate-float {
+            animation: float 2.5s ease-out forwards;
+        }
+        
+        .animate-shimmer {
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            background-size: 1000px 100%;
+            animation: shimmer 2s infinite;
+        }
+        
+        .animate-glow {
+            animation: glow 2s infinite ease-in-out;
+        }
+        
+        .animate-rotate {
+            animation: rotate 20s linear infinite;
+        }
+        
+        .animate-wiggle {
+            animation: wiggle 1s ease-in-out infinite;
+        }
+        
+        .animate-confetti {
+            animation: confetti 3s ease-out forwards;
+        }
+        
+        .star {
+            position: absolute;
+            width: 3px;
+            height: 3px;
+            background: white;
+            border-radius: 50%;
+            animation: pulse 3s infinite;
+            box-shadow: 0 0 10px rgba(255,255,255,0.8);
+        }
+        
+        .particle {
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            background: radial-gradient(circle, #fbbf24 0%, #f59e0b 100%);
+            border-radius: 50%;
+            pointer-events: none;
+            box-shadow: 0 0 20px #fbbf24;
+        }
+        
+        .confetti-piece {
+            position: fixed;
+            width: 10px;
+            height: 10px;
+            pointer-events: none;
+            z-index: 9999;
+        }
+        
+        .modal-content {
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        
+        .modal-content::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        .modal-content::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        
+        .modal-content::-webkit-scrollbar-thumb {
+            background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
+            border-radius: 10px;
+        }
+        
+        .skill-card {
+            transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .skill-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            transition: left 0.5s;
+        }
+        
+        .skill-card:hover::before {
+            left: 100%;
+        }
+        
+        .skill-card:hover {
+            transform: translateY(-10px) scale(1.05) rotateZ(2deg);
+            box-shadow: 0 25px 70px rgba(251, 191, 36, 0.4), 0 0 50px rgba(251, 191, 36, 0.3);
+        }
+        
+        .skill-card:active {
+            transform: translateY(-5px) scale(1.02);
+        }
+        
+        .skill-card.locked {
+            filter: grayscale(1) brightness(0.5);
+            opacity: 0.6;
+        }
+        
+        .skill-card.completed {
+            box-shadow: 0 0 40px rgba(34, 197, 94, 0.6), 0 0 80px rgba(34, 197, 94, 0.3);
+            animation: glow 3s infinite;
+        }
+        
+        .level-badge {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.5);
+            transform-style: preserve-3d;
+            transition: transform 0.3s;
+        }
+        
+        .level-badge:hover {
+            transform: rotateY(180deg);
+        }
+        
+        .progress-bar-fill {
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .progress-bar-fill::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            right: 0;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            animation: shimmer 2s infinite;
+        }
+        
+        .xp-badge {
+            display: inline-block;
+            transition: all 0.3s ease;
+        }
+        
+        .xp-badge:hover {
+            transform: scale(1.2) rotate(10deg);
+        }
+        
+        .btn-complete {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .btn-complete::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.3);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+        
+        .btn-complete:hover::before {
+            width: 300px;
+            height: 300px;
+        }
+        
+        .btn-complete:active {
+            transform: scale(0.95);
+        }
+        
+        .option-btn {
+            transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .option-btn::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            background: rgba(102, 126, 234, 0.2);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            transition: width 0.5s, height 0.5s;
+        }
+        
+        .option-btn:hover::after {
+            width: 500px;
+            height: 500px;
+        }
+        
+        .option-btn:hover {
+            transform: translateX(10px);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+        }
+        
+        .header-glow {
+            box-shadow: 0 10px 40px rgba(102, 126, 234, 0.3);
+        }
+        
+        .celebration-trophy {
+            animation: bounce 1s ease-in-out infinite, rotate 3s linear infinite;
+        }
+        
+        .ripple-effect {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(251, 191, 36, 0.5);
+            animation: ripple 0.6s ease-out;
+        }
+        
+        .gradient-text {
+            background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 50%, #fbbf24 100%);
+            background-size: 200% auto;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: shimmer 3s linear infinite;
+        }
+        
+        .floating-icon {
+            animation: float 3s ease-in-out infinite;
+        }
+        
+        @keyframes float-gentle {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        .floating-icon {
+            animation: float-gentle 3s ease-in-out infinite;
+        }
+        
+        .skill-icon-rotate {
+            display: inline-block;
+            transition: transform 0.5s ease;
+        }
+        
+        .skill-card:hover .skill-icon-rotate {
+            transform: rotateY(360deg) scale(1.2);
+        }
+        
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .skill-node:hover circle {
+            r: 30;
+            filter: brightness(1.2);
+        }
+        
+        .skill-node:hover text {
+            font-size: 22px;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 text-white min-h-screen">
+    <!-- Background Stars -->
+    <div id="starsContainer" class="fixed inset-0 overflow-hidden pointer-events-none"></div>
+    
+    <!-- Particles Container -->
+    <div id="particlesContainer" class="fixed inset-0 overflow-hidden pointer-events-none z-40"></div>
+    
+    <!-- Confetti Container -->
+    <div id="confettiContainer" class="fixed inset-0 overflow-hidden pointer-events-none z-50"></div>
+    
+    <!-- Celebration Overlay -->
+    <div id="celebrationOverlay" class="hidden fixed inset-0 bg-black bg-opacity-60 backdrop-blur-md flex items-center justify-center z-50 animate-fadeIn">
+        <div class="glass-effect p-12 rounded-3xl shadow-2xl text-center animate-bounce-custom">
+            <div class="text-9xl mb-6 celebration-trophy">🏆</div>
+            <h2 class="text-5xl font-bold mb-4 gradient-text">🎉 LEVEL UP! 🎉</h2>
+            <p class="text-2xl font-semibold" id="levelUpText">You've unlocked Level 2!</p>
+            <div class="mt-6 text-6xl animate-wiggle">✨</div>
+        </div>
+    </div>
+
+    <!-- Header -->
+    <header class="relative z-10 bg-gradient-to-r from-purple-900/90 to-indigo-900/90 backdrop-blur-lg shadow-2xl p-6 header-glow animate-slideInUp">
+        <div class="max-w-6xl mx-auto">
+            <div class="flex items-center justify-between mb-4 flex-wrap gap-4">
+                <div class="animate-slideInLeft">
+                    <h1 class="text-5xl font-bold mb-2 flex items-center gap-3">
+                        <span class="text-6xl floating-icon">✨</span>
+                        <span class="gradient-text">Soft Skills Quest</span>
+                    </h1>
+                    <p class="text-purple-200 text-lg">Master professional skills through interactive challenges</p>
+                </div>
+                <div class="text-right animate-slideInRight">
+                    <div class="xp-badge text-4xl font-bold text-yellow-400 mb-1">
+                        <span id="totalXP">0</span> XP
+                    </div>
+                    <div class="level-badge inline-block px-4 py-2 rounded-full text-white font-bold">
+                        Level <span id="currentLevel">1</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Progress bar -->
+            <div class="bg-purple-950/50 rounded-full h-5 overflow-hidden shadow-inner">
+                <div id="progressBar" class="progress-bar-fill bg-gradient-to-r from-green-400 via-emerald-500 to-green-400 h-full transition-all duration-700 ease-out flex items-center justify-end px-3" style="width: 0%">
+                    <span id="progressText" class="text-xs font-bold text-white drop-shadow-lg"></span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Navigation -->
+    <nav class="relative z-10 max-w-7xl mx-auto px-6 py-4">
+        <div class="flex justify-between items-center">
+            <!-- Language Selector -->
+            <div class="flex space-x-2">
+                <button onclick="changeLanguage('en')" id="langEn" class="px-3 py-2 bg-blue-600 text-white rounded-lg text-sm font-semibold hover:bg-blue-700 transition-all">
+                    EN
+                </button>
+                <button onclick="changeLanguage('fr')" id="langFr" class="px-3 py-2 bg-gray-600 text-white rounded-lg text-sm font-semibold hover:bg-gray-700 transition-all">
+                    FR
+                </button>
+                <button onclick="changeLanguage('ar')" id="langAr" class="px-3 py-2 bg-gray-600 text-white rounded-lg text-sm font-semibold hover:bg-gray-700 transition-all">
+                    AR
+                </button>
+            </div>
+            
+            <!-- Page Navigation -->
+            <div class="flex space-x-4">
+                <button onclick="showPage('game')" id="gameBtn" class="px-6 py-3 bg-purple-600 text-white rounded-lg font-semibold hover:bg-purple-700 transition-all transform hover:scale-105">
+                    <span id="navGame">🎮 Skills Challenge</span>
+                </button>
+                <button onclick="showPage('map')" id="mapBtn" class="px-6 py-3 bg-indigo-600 text-white rounded-lg font-semibold hover:bg-indigo-700 transition-all transform hover:scale-105">
+                    <span id="navMap">🗺️ Skills World Map</span>
+                </button>
+            </div>
+            
+            <!-- PDF Download -->
+            <button onclick="downloadPDF()" class="px-4 py-2 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition-all transform hover:scale-105">
+                <span id="downloadBtn">📊 Download Report</span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Game Page -->
+    <main id="gamePage" class="relative z-10 max-w-7xl mx-auto p-6">
+        <div id="skillsContainer"></div>
+    </main>
+
+    <!-- Map Page -->
+    <main id="mapPage" class="hidden relative z-10 max-w-7xl mx-auto p-6">
+        <div class="text-center mb-8">
+            <h2 class="text-4xl font-bold mb-4 gradient-text" id="mapTitle">🌍 Soft Skills World Map</h2>
+            <p class="text-purple-200 text-lg" id="mapSubtitle">Explore the interconnected world of professional skills</p>
+        </div>
+        
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Map Visualization -->
+            <div class="lg:col-span-2">
+                <div class="bg-gradient-to-br from-blue-900/50 to-purple-900/50 backdrop-blur-lg rounded-3xl p-8 border border-white/20">
+                    <h3 class="text-2xl font-bold mb-6 text-center">🗺️ <span id="journeyPathTitle">Skills Journey Path</span></h3>
+                    <div id="skillsMap" class="relative min-h-96"></div>
+                </div>
+            </div>
+            
+            <!-- Information Panel -->
+            <div class="space-y-6">
+                <div class="bg-gradient-to-br from-green-900/50 to-emerald-900/50 backdrop-blur-lg rounded-3xl p-6 border border-white/20">
+                    <h3 class="text-xl font-bold mb-4" id="progressTitle">📊 Your Progress</h3>
+                    <div id="mapStats"></div>
+                </div>
+                
+                <div class="bg-gradient-to-br from-orange-900/50 to-red-900/50 backdrop-blur-lg rounded-3xl p-6 border border-white/20">
+                    <h3 class="text-xl font-bold mb-4" id="insightsTitle">💡 Skill Insights</h3>
+                    <div id="skillInsights"></div>
+                </div>
+                
+                <div class="bg-gradient-to-br from-cyan-900/50 to-blue-900/50 backdrop-blur-lg rounded-3xl p-6 border border-white/20">
+                    <h3 class="text-xl font-bold mb-4" id="nextStepsTitle">🎯 Next Steps</h3>
+                    <div id="nextSteps"></div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Skill Modal -->
+    <div id="skillModal" class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fadeIn">
+        <div class="bg-white text-gray-900 rounded-3xl shadow-2xl max-w-2xl w-full modal-content animate-slideInRight">
+            <div id="modalHeader" class="p-6 rounded-t-3xl relative overflow-hidden">
+                <div class="absolute inset-0 animate-shimmer"></div>
+                <div class="flex items-center justify-between mb-4 relative z-10">
+                    <div class="flex items-center gap-4">
+                        <div class="text-7xl skill-icon-rotate" id="modalIcon"></div>
+                        <div>
+                            <h2 class="text-4xl font-bold text-white drop-shadow-lg" id="modalTitle"></h2>
+                            <p class="text-white/90 text-lg" id="modalLevel"></p>
+                        </div>
+                    </div>
+                    <button onclick="closeModal()" class="text-white hover:bg-white/30 rounded-full p-3 transition-all hover:rotate-90 text-3xl w-12 h-12 font-bold hover:scale-110">
+                        ×
+                    </button>
+                </div>
+            </div>
+
+            <div class="p-6" id="modalContent">
+                <!-- Content will be injected here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="relative z-10 text-center py-8 bg-black/30 backdrop-blur-lg mt-16 animate-slideInUp">
+        <p class="text-purple-200 text-lg">© 2025 Soft Skills Quest — Discover. Learn. Grow. ✨</p>
+    </footer>
+
+    <script>
+        // Game State
+        let gameState = {
+            completedSkills: [],
+            currentLevel: 1,
+            totalXP: 0,
+            currentSkill: null,
+            quizAnswers: {},
+            showFeedback: {},
+            language: 'en'
+        };
+
+        // Language translations
+        const translations = {
+            en: {
+                title: "Soft Skills Quest",
+                subtitle: "Master professional skills through interactive challenges",
+                navGame: "🎮 Skills Challenge",
+                navMap: "🗺️ Skills World Map",
+                downloadBtn: "📊 Download Report",
+                mapTitle: "🌍 Soft Skills World Map",
+                mapSubtitle: "Explore the interconnected world of professional skills",
+                yourProgress: "📊 Your Progress",
+                skillInsights: "💡 Skill Insights",
+                nextSteps: "🎯 Next Steps",
+                skillsMastered: "Skills Mastered:",
+                completionRate: "Completion Rate:",
+                totalXP: "Total XP:",
+                currentLevel: "Current Level:",
+                foundationLevel: "🌟 Foundation Level",
+                intermediateLevel: "🚀 Intermediate Level",
+                expertLevel: "👑 Expert Level",
+                essentialSkills: "Essential skills for professional success",
+                advancedSkills: "Advanced problem-solving abilities",
+                leadershipSkills: "Leadership and innovation mastery",
+                startLearning: "Start Learning →",
+                congratulations: "Congratulations!",
+                allSkillsMastered: "You've mastered all available skills!",
+                learningTips: "💡 Learning Tips:",
+                tip1: "Practice skills in real-world situations",
+                tip2: "Combine multiple skills for better results",
+                tip3: "Seek feedback from colleagues and mentors",
+                tip4: "Reflect on your progress regularly",
+                whatIs: "What is",
+                keyAreas: "Key Areas:",
+                realWorldApps: "Real-World Applications:",
+                knowledgeCheck: "Knowledge Check",
+                completeChallenge: "Complete Skill Challenge",
+                skillMastered: "Skill Mastered!",
+                earnedXP: "You've successfully completed this skill and earned",
+                clickExplore: "Click to explore →",
+                completePrevious: "Complete previous level",
+                correct: "Excellent! That's correct!",
+                incorrect: "Not quite. The correct answer is:",
+                needCorrect: "You need at least",
+                correctAnswers: "correct answers to pass. Review the material and try again!",
+                outstanding: "Outstanding! You've mastered",
+                andEarned: "and earned",
+                score: "Score:",
+                completed: "completed",
+                journeyPath: "Skills Journey Path",
+                level: "Level",
+                skill: "Skill",
+                foundationDesc: "Foundation Skills - Start Your Journey",
+                intermediateDesc: "Intermediate Skills - Level Up Your Game",
+                expertDesc: "Advanced Skills - Master Your Craft"
+            },
+            fr: {
+                title: "Quête des Compétences Douces",
+                subtitle: "Maîtrisez les compétences professionnelles grâce à des défis interactifs",
+                navGame: "🎮 Défi Compétences",
+                navMap: "🗺️ Carte du Monde des Compétences",
+                downloadBtn: "📊 Télécharger le Rapport",
+                mapTitle: "🌍 Carte du Monde des Compétences Douces",
+                mapSubtitle: "Explorez le monde interconnecté des compétences professionnelles",
+                yourProgress: "📊 Votre Progrès",
+                skillInsights: "💡 Aperçus des Compétences",
+                nextSteps: "🎯 Prochaines Étapes",
+                skillsMastered: "Compétences Maîtrisées:",
+                completionRate: "Taux d'Achèvement:",
+                totalXP: "XP Total:",
+                currentLevel: "Niveau Actuel:",
+                foundationLevel: "🌟 Niveau Fondation",
+                intermediateLevel: "🚀 Niveau Intermédiaire",
+                expertLevel: "👑 Niveau Expert",
+                essentialSkills: "Compétences essentielles pour le succès professionnel",
+                advancedSkills: "Capacités avancées de résolution de problèmes",
+                leadershipSkills: "Maîtrise du leadership et de l'innovation",
+                startLearning: "Commencer l'Apprentissage →",
+                congratulations: "Félicitations!",
+                allSkillsMastered: "Vous avez maîtrisé toutes les compétences disponibles!",
+                learningTips: "💡 Conseils d'Apprentissage:",
+                tip1: "Pratiquez les compétences dans des situations réelles",
+                tip2: "Combinez plusieurs compétences pour de meilleurs résultats",
+                tip3: "Demandez des commentaires à vos collègues et mentors",
+                tip4: "Réfléchissez régulièrement à vos progrès",
+                whatIs: "Qu'est-ce que",
+                keyAreas: "Domaines Clés:",
+                realWorldApps: "Applications Réelles:",
+                knowledgeCheck: "Vérification des Connaissances",
+                completeChallenge: "Terminer le Défi de Compétence",
+                skillMastered: "Compétence Maîtrisée!",
+                earnedXP: "Vous avez terminé avec succès cette compétence et gagné",
+                clickExplore: "Cliquez pour explorer →",
+                completePrevious: "Terminez le niveau précédent",
+                correct: "Excellent! C'est correct!",
+                incorrect: "Pas tout à fait. La bonne réponse est:",
+                needCorrect: "Vous devez avoir au moins",
+                correctAnswers: "bonnes réponses pour réussir. Relisez le matériel et réessayez!",
+                outstanding: "Exceptionnel! Vous avez maîtrisé",
+                andEarned: "et gagné",
+                score: "Score:",
+                completed: "terminé",
+                journeyPath: "Chemin du Parcours de Compétences",
+                level: "Niveau",
+                skill: "Compétence",
+                foundationDesc: "Compétences de Base - Commencez Votre Parcours",
+                intermediateDesc: "Compétences Intermédiaires - Améliorez Votre Jeu",
+                expertDesc: "Compétences Avancées - Maîtrisez Votre Art"
+            },
+            ar: {
+                title: "مغامرة المهارات الناعمة",
+                subtitle: "أتقن المهارات المهنية من خلال التحديات التفاعلية",
+                navGame: "🎮 تحدي المهارات",
+                navMap: "🗺️ خريطة عالم المهارات",
+                downloadBtn: "📊 تحميل التقرير",
+                mapTitle: "🌍 خريطة عالم المهارات الناعمة",
+                mapSubtitle: "استكشف عالم المترابط للمهارات المهنية",
+                yourProgress: "📊 تقدمك",
+                skillInsights: "💡 رؤى المهارات",
+                nextSteps: "🎯 الخطوات التالية",
+                skillsMastered: "المهارات المتقنة:",
+                completionRate: "معدل الإنجاز:",
+                totalXP: "إجمالي النقاط:",
+                currentLevel: "المستوى الحالي:",
+                foundationLevel: "🌟 مستوى الأساس",
+                intermediateLevel: "🚀 المستوى المتوسط",
+                expertLevel: "👑 مستوى الخبير",
+                essentialSkills: "مهارات أساسية للنجاح المهني",
+                advancedSkills: "قدرات متقدمة في حل المشاكل",
+                leadershipSkills: "إتقان القيادة والابتكار",
+                startLearning: "ابدأ التعلم ←",
+                congratulations: "مبروك!",
+                allSkillsMastered: "لقد أتقنت جميع المهارات المتاحة!",
+                learningTips: "💡 نصائح التعلم:",
+                tip1: "مارس المهارات في مواقف حقيقية",
+                tip2: "اجمع بين عدة مهارات لنتائج أفضل",
+                tip3: "اطلب التغذية الراجعة من الزملاء والمرشدين",
+                tip4: "تأمل في تقدمك بانتظام",
+                whatIs: "ما هو",
+                keyAreas: "المجالات الرئيسية:",
+                realWorldApps: "التطبيقات العملية:",
+                knowledgeCheck: "فحص المعرفة",
+                completeChallenge: "أكمل تحدي المهارة",
+                skillMastered: "تم إتقان المهارة!",
+                earnedXP: "لقد أكملت هذه المهارة بنجاح وحصلت على",
+                clickExplore: "انقر للاستكشاف ←",
+                completePrevious: "أكمل المستوى السابق",
+                correct: "ممتاز! هذا صحيح!",
+                incorrect: "ليس تماماً. الإجابة الصحيحة هي:",
+                needCorrect: "تحتاج إلى على الأقل",
+                correctAnswers: "إجابات صحيحة للنجاح. راجع المادة وحاول مرة أخرى!",
+                outstanding: "متميز! لقد أتقنت",
+                andEarned: "وحصلت على",
+                score: "النتيجة:",
+                completed: "مكتمل",
+                journeyPath: "مسار رحلة المهارات",
+                level: "المستوى",
+                skill: "مهارة",
+                foundationDesc: "مهارات الأساس - ابدأ رحلتك",
+                intermediateDesc: "مهارات متوسطة - طور مستواك",
+                expertDesc: "مهارات متقدمة - أتقن حرفتك"
+            }
+        };
+
+        // Skill translations
+        const skillTranslations = {
+            en: {
+                1: { name: "Communication", shortDesc: "The art of expressing ideas clearly and listening actively.", definition: "Communication is the foundation of professional success. It involves not just speaking clearly, but also listening actively, understanding non-verbal cues, and adapting your message to your audience. Effective communication builds trust, prevents misunderstandings, and creates stronger relationships in both personal and professional settings.", keyPoints: ["Active listening techniques", "Non-verbal communication awareness", "Clear and concise messaging", "Empathy and emotional intelligence", "Feedback giving and receiving"], realWorldExamples: ["Presenting ideas in meetings", "Resolving conflicts with colleagues", "Giving constructive feedback", "Leading team discussions"], quiz: [{question: "What percentage of communication is non-verbal?", options: ["25%", "55%", "75%", "90%"], correct: 1}, {question: "What is the most important aspect of active listening?", options: ["Preparing your response", "Maintaining eye contact", "Fully focusing on the speaker", "Taking notes"], correct: 2}, {question: "Which technique helps in difficult conversations?", options: ["Avoiding the topic", "Using 'I' statements", "Raising your voice", "Interrupting frequently"], correct: 1}] },
+                2: { name: "Teamwork", shortDesc: "Collaborating effectively with others to achieve shared goals.", definition: "Teamwork is the ability to work harmoniously with others toward a common goal. It requires understanding different perspectives, respecting diverse opinions, supporting team members, and contributing your unique strengths while compensating for others' weaknesses. Great teamwork multiplies individual efforts and creates synergy.", keyPoints: ["Collaborative problem-solving", "Conflict resolution", "Shared responsibility", "Trust building", "Diverse perspective appreciation"], realWorldExamples: ["Cross-functional project teams", "Brainstorming sessions", "Peer mentoring", "Team-based decision making"], quiz: [{question: "What is the key to effective team collaboration?", options: ["Having one strong leader", "Clear roles and open communication", "Working independently", "Avoiding conflicts"], correct: 1}, {question: "How should you handle team disagreements?", options: ["Ignore them", "Let the leader decide", "Listen to all perspectives and find common ground", "Vote immediately"], correct: 2}, {question: "What makes a team high-performing?", options: ["Individual excellence only", "Psychological safety and trust", "Strict hierarchy", "Competition between members"], correct: 1}] },
+                3: { name: "Emotional Intelligence", shortDesc: "Understanding and managing emotions in yourself and others.", definition: "Emotional Intelligence (EQ) is the ability to recognize, understand, and manage your own emotions while effectively recognizing and responding to others' emotions. It includes self-awareness, self-regulation, motivation, empathy, and social skills. High EQ leads to better relationships, leadership, and overall success.", keyPoints: ["Self-awareness and reflection", "Emotion regulation techniques", "Empathy development", "Social awareness", "Relationship management"], realWorldExamples: ["Managing stress during deadlines", "Reading team morale", "Providing emotional support", "Navigating office politics"], quiz: [{question: "What is the first component of emotional intelligence?", options: ["Empathy", "Self-awareness", "Social skills", "Motivation"], correct: 1}, {question: "How can you improve your emotional regulation?", options: ["Suppressing all emotions", "Mindfulness and breathing techniques", "Avoiding emotional situations", "Reacting immediately"], correct: 1}, {question: "What does empathy involve?", options: ["Agreeing with everyone", "Understanding others' perspectives", "Fixing others' problems", "Avoiding emotional people"], correct: 1}] }
+            },
+            fr: {
+                1: { name: "Communication", shortDesc: "L'art d'exprimer clairement ses idées et d'écouter activement.", definition: "La communication est le fondement du succès professionnel. Elle implique non seulement de parler clairement, mais aussi d'écouter activement, de comprendre les signaux non verbaux et d'adapter votre message à votre audience. Une communication efficace renforce la confiance, prévient les malentendus et crée des relations plus solides.", keyPoints: ["Techniques d'écoute active", "Conscience de la communication non verbale", "Messages clairs et concis", "Empathie et intelligence émotionnelle", "Donner et recevoir des commentaires"], realWorldExamples: ["Présenter des idées en réunion", "Résoudre des conflits avec des collègues", "Donner des commentaires constructifs", "Diriger des discussions d'équipe"], quiz: [{question: "Quel pourcentage de la communication est non verbal?", options: ["25%", "55%", "75%", "90%"], correct: 1}, {question: "Quel est l'aspect le plus important de l'écoute active?", options: ["Préparer votre réponse", "Maintenir le contact visuel", "Se concentrer pleinement sur l'orateur", "Prendre des notes"], correct: 2}, {question: "Quelle technique aide dans les conversations difficiles?", options: ["Éviter le sujet", "Utiliser des déclarations 'Je'", "Élever la voix", "Interrompre fréquemment"], correct: 1}] },
+                2: { name: "Travail d'équipe", shortDesc: "Collaborer efficacement avec les autres pour atteindre des objectifs communs.", definition: "Le travail d'équipe est la capacité de travailler harmonieusement avec les autres vers un objectif commun. Il nécessite de comprendre différentes perspectives, de respecter des opinions diverses, de soutenir les membres de l'équipe et de contribuer avec vos forces uniques.", keyPoints: ["Résolution collaborative de problèmes", "Résolution de conflits", "Responsabilité partagée", "Construction de confiance", "Appréciation des perspectives diverses"], realWorldExamples: ["Équipes de projet transversales", "Sessions de brainstorming", "Mentorat par les pairs", "Prise de décision en équipe"], quiz: [{question: "Quelle est la clé d'une collaboration d'équipe efficace?", options: ["Avoir un leader fort", "Rôles clairs et communication ouverte", "Travailler indépendamment", "Éviter les conflits"], correct: 1}, {question: "Comment devriez-vous gérer les désaccords d'équipe?", options: ["Les ignorer", "Laisser le leader décider", "Écouter toutes les perspectives et trouver un terrain d'entente", "Voter immédiatement"], correct: 2}, {question: "Qu'est-ce qui rend une équipe performante?", options: ["Excellence individuelle seulement", "Sécurité psychologique et confiance", "Hiérarchie stricte", "Compétition entre membres"], correct: 1}] },
+                3: { name: "Intelligence Émotionnelle", shortDesc: "Comprendre et gérer les émotions en soi et chez les autres.", definition: "L'Intelligence Émotionnelle (QE) est la capacité de reconnaître, comprendre et gérer vos propres émotions tout en reconnaissant et répondant efficacement aux émotions des autres. Elle inclut la conscience de soi, l'autorégulation, la motivation, l'empathie et les compétences sociales.", keyPoints: ["Conscience de soi et réflexion", "Techniques de régulation émotionnelle", "Développement de l'empathie", "Conscience sociale", "Gestion des relations"], realWorldExamples: ["Gérer le stress pendant les échéances", "Lire le moral de l'équipe", "Fournir un soutien émotionnel", "Naviguer dans la politique de bureau"], quiz: [{question: "Quel est le premier composant de l'intelligence émotionnelle?", options: ["Empathie", "Conscience de soi", "Compétences sociales", "Motivation"], correct: 1}, {question: "Comment pouvez-vous améliorer votre régulation émotionnelle?", options: ["Supprimer toutes les émotions", "Techniques de pleine conscience et de respiration", "Éviter les situations émotionnelles", "Réagir immédiatement"], correct: 1}, {question: "Qu'implique l'empathie?", options: ["Être d'accord avec tout le monde", "Comprendre les perspectives des autres", "Résoudre les problèmes des autres", "Éviter les personnes émotionnelles"], correct: 1}] }
+            },
+            ar: {
+                1: { name: "التواصل", shortDesc: "فن التعبير عن الأفكار بوضوح والاستماع بفعالية.", definition: "التواصل هو أساس النجاح المهني. يتضمن ليس فقط التحدث بوضوح، ولكن أيضاً الاستماع الفعال، وفهم الإشارات غير اللفظية، وتكييف رسالتك مع جمهورك. التواصل الفعال يبني الثقة ويمنع سوء الفهم ويخلق علاقات أقوى.", keyPoints: ["تقنيات الاستماع الفعال", "الوعي بالتواصل غير اللفظي", "الرسائل الواضحة والمختصرة", "التعاطف والذكاء العاطفي", "إعطاء وتلقي التغذية الراجعة"], realWorldExamples: ["عرض الأفكار في الاجتماعات", "حل النزاعات مع الزملاء", "تقديم التغذية الراجعة البناءة", "قيادة مناقشات الفريق"], quiz: [{question: "ما هي نسبة التواصل غير اللفظي؟", options: ["25%", "55%", "75%", "90%"], correct: 1}, {question: "ما هو أهم جانب في الاستماع الفعال؟", options: ["تحضير ردك", "الحفاظ على التواصل البصري", "التركيز الكامل على المتحدث", "تدوين الملاحظات"], correct: 2}, {question: "أي تقنية تساعد في المحادثات الصعبة؟", options: ["تجنب الموضوع", "استخدام عبارات 'أنا'", "رفع الصوت", "المقاطعة المتكررة"], correct: 1}] },
+                2: { name: "العمل الجماعي", shortDesc: "التعاون بفعالية مع الآخرين لتحقيق الأهداف المشتركة.", definition: "العمل الجماعي هو القدرة على العمل بانسجام مع الآخرين نحو هدف مشترك. يتطلب فهم وجهات نظر مختلفة، واحترام الآراء المتنوعة، ودعم أعضاء الفريق، والمساهمة بنقاط قوتك الفريدة.", keyPoints: ["حل المشاكل التعاوني", "حل النزاعات", "المسؤولية المشتركة", "بناء الثقة", "تقدير وجهات النظر المتنوعة"], realWorldExamples: ["فرق المشاريع متعددة الوظائف", "جلسات العصف الذهني", "الإرشاد بين الأقران", "اتخاذ القرارات الجماعية"], quiz: [{question: "ما هو مفتاح التعاون الفعال للفريق؟", options: ["وجود قائد قوي واحد", "أدوار واضحة وتواصل مفتوح", "العمل بشكل مستقل", "تجنب النزاعات"], correct: 1}, {question: "كيف يجب التعامل مع خلافات الفريق؟", options: ["تجاهلها", "ترك القائد يقرر", "الاستماع لجميع وجهات النظر وإيجاد أرضية مشتركة", "التصويت فوراً"], correct: 2}, {question: "ما الذي يجعل الفريق عالي الأداء؟", options: ["التميز الفردي فقط", "الأمان النفسي والثقة", "التسلسل الهرمي الصارم", "المنافسة بين الأعضاء"], correct: 1}] },
+                3: { name: "الذكاء العاطفي", shortDesc: "فهم وإدارة المشاعر في النفس والآخرين.", definition: "الذكاء العاطفي هو القدرة على التعرف على مشاعرك وفهمها وإدارتها بينما تتعرف بفعالية على مشاعر الآخرين وتستجيب لها. يشمل الوعي الذاتي والتنظيم الذاتي والدافعية والتعاطف والمهارات الاجتماعية.", keyPoints: ["الوعي الذاتي والتأمل", "تقنيات تنظيم المشاعر", "تطوير التعاطف", "الوعي الاجتماعي", "إدارة العلاقات"], realWorldExamples: ["إدارة الضغط أثناء المواعيد النهائية", "قراءة معنويات الفريق", "تقديم الدعم العاطفي", "التنقل في سياسات المكتب"], quiz: [{question: "ما هو المكون الأول للذكاء العاطفي؟", options: ["التعاطف", "الوعي الذاتي", "المهارات الاجتماعية", "الدافعية"], correct: 1}, {question: "كيف يمكنك تحسين تنظيمك العاطفي؟", options: ["قمع جميع المشاعر", "تقنيات اليقظة والتنفس", "تجنب المواقف العاطفية", "الرد فوراً"], correct: 1}, {question: "ماذا يتضمن التعاطف؟", options: ["الموافقة على الجميع", "فهم وجهات نظر الآخرين", "حل مشاكل الآخرين", "تجنب الأشخاص العاطفيين"], correct: 1}] }
+            }
+        };
+
+        // Get skill translation
+        function getSkillTranslation(skillId, field) {
+            const lang = gameState.language;
+            const skillData = skillTranslations[lang] && skillTranslations[lang][skillId];
+            return skillData ? skillData[field] : skillsData.find(s => s.id === skillId)[field];
+        }
+
+        // Skills Data
+        const skillsData = [
+            {
+                id: 1,
+                level: 1,
+                name: "Communication",
+                icon: "💬",
+                color: "from-blue-400 to-cyan-500",
+                shortDesc: "The art of expressing ideas clearly and listening actively.",
+                definition: "Communication is the foundation of professional success. It involves not just speaking clearly, but also listening actively, understanding non-verbal cues, and adapting your message to your audience. Effective communication builds trust, prevents misunderstandings, and creates stronger relationships in both personal and professional settings.",
+                keyPoints: ["Active listening techniques", "Non-verbal communication awareness", "Clear and concise messaging", "Empathy and emotional intelligence", "Feedback giving and receiving"],
+                realWorldExamples: ["Presenting ideas in meetings", "Resolving conflicts with colleagues", "Giving constructive feedback", "Leading team discussions"],
+                quiz: [
+                    {
+                        question: "What percentage of communication is non-verbal?",
+                        options: ["25%", "55%", "75%", "90%"],
+                        correct: 1
+                    },
+                    {
+                        question: "What is the most important aspect of active listening?",
+                        options: ["Preparing your response", "Maintaining eye contact", "Fully focusing on the speaker", "Taking notes"],
+                        correct: 2
+                    },
+                    {
+                        question: "Which technique helps in difficult conversations?",
+                        options: ["Avoiding the topic", "Using 'I' statements", "Raising your voice", "Interrupting frequently"],
+                        correct: 1
+                    }
+                ],
+                prompt: "Act as a communication coach. Create 3 scenarios where I need to communicate difficult news to a team member, and guide me through the best approach for each situation.",
+                xp: 100
+            },
+            {
+                id: 2,
+                level: 1,
+                name: "Teamwork",
+                icon: "🤝",
+                color: "from-purple-400 to-pink-500",
+                shortDesc: "Collaborating effectively with others to achieve shared goals.",
+                definition: "Teamwork is the ability to work harmoniously with others toward a common goal. It requires understanding different perspectives, respecting diverse opinions, supporting team members, and contributing your unique strengths while compensating for others' weaknesses. Great teamwork multiplies individual efforts and creates synergy.",
+                keyPoints: ["Collaborative problem-solving", "Conflict resolution", "Shared responsibility", "Trust building", "Diverse perspective appreciation"],
+                realWorldExamples: ["Cross-functional project teams", "Brainstorming sessions", "Peer mentoring", "Team-based decision making"],
+                quiz: [
+                    {
+                        question: "What is the key to effective team collaboration?",
+                        options: ["Having one strong leader", "Clear roles and open communication", "Working independently", "Avoiding conflicts"],
+                        correct: 1
+                    },
+                    {
+                        question: "How should you handle team disagreements?",
+                        options: ["Ignore them", "Let the leader decide", "Listen to all perspectives and find common ground", "Vote immediately"],
+                        correct: 2
+                    },
+                    {
+                        question: "What makes a team high-performing?",
+                        options: ["Individual excellence only", "Psychological safety and trust", "Strict hierarchy", "Competition between members"],
+                        correct: 1
+                    }
+                ],
+                prompt: "You are a team dynamics expert. Design a team-building exercise that helps improve collaboration and trust.",
+                xp: 100
+            },
+            {
+                id: 3,
+                level: 1,
+                name: "Emotional Intelligence",
+                icon: "🧠",
+                color: "from-pink-400 to-rose-500",
+                shortDesc: "Understanding and managing emotions in yourself and others.",
+                definition: "Emotional Intelligence (EQ) is the ability to recognize, understand, and manage your own emotions while effectively recognizing and responding to others' emotions. It includes self-awareness, self-regulation, motivation, empathy, and social skills. High EQ leads to better relationships, leadership, and overall success.",
+                keyPoints: ["Self-awareness and reflection", "Emotion regulation techniques", "Empathy development", "Social awareness", "Relationship management"],
+                realWorldExamples: ["Managing stress during deadlines", "Reading team morale", "Providing emotional support", "Navigating office politics"],
+                quiz: [
+                    {
+                        question: "What is the first component of emotional intelligence?",
+                        options: ["Empathy", "Self-awareness", "Social skills", "Motivation"],
+                        correct: 1
+                    },
+                    {
+                        question: "How can you improve your emotional regulation?",
+                        options: ["Suppressing all emotions", "Mindfulness and breathing techniques", "Avoiding emotional situations", "Reacting immediately"],
+                        correct: 1
+                    },
+                    {
+                        question: "What does empathy involve?",
+                        options: ["Agreeing with everyone", "Understanding others' perspectives", "Fixing others' problems", "Avoiding emotional people"],
+                        correct: 1
+                    }
+                ],
+                prompt: "As an emotional intelligence coach, help me develop strategies to better understand and manage my emotions in challenging workplace situations.",
+                xp: 120
+            },
+            {
+                id: 4,
+                level: 2,
+                name: "Problem-Solving",
+                icon: "🧩",
+                color: "from-orange-400 to-red-500",
+                shortDesc: "Finding creative solutions to challenges and obstacles.",
+                definition: "Problem-solving is a systematic approach to identifying, analyzing, and resolving challenges. It combines critical thinking, creativity, and practical judgment to develop effective solutions. Great problem-solvers break down complex issues, consider multiple perspectives, and implement solutions while learning from outcomes.",
+                keyPoints: ["Root cause analysis", "Creative thinking techniques", "Decision-making frameworks", "Solution evaluation", "Implementation planning"],
+                realWorldExamples: ["Debugging software issues", "Resolving customer complaints", "Optimizing workflows", "Budget constraint solutions"],
+                quiz: [
+                    {
+                        question: "What is the first step in effective problem-solving?",
+                        options: ["Brainstorm solutions", "Clearly define the problem", "Implement the first idea", "Ask for help"],
+                        correct: 1
+                    },
+                    {
+                        question: "Which technique helps generate creative solutions?",
+                        options: ["Sticking to proven methods", "Brainstorming without judgment", "Working alone always", "Rushing to conclusions"],
+                        correct: 1
+                    },
+                    {
+                        question: "How should you evaluate potential solutions?",
+                        options: ["Choose the cheapest option", "Consider feasibility, impact, and resources", "Pick the most complex one", "Go with your first instinct"],
+                        correct: 1
+                    }
+                ],
+                prompt: "As a problem-solving mentor, present me with a realistic workplace scenario involving a project deadline conflict and guide me through your problem-solving framework.",
+                xp: 150
+            },
+            {
+                id: 5,
+                level: 2,
+                name: "Time Management",
+                icon: "⏰",
+                color: "from-green-400 to-emerald-500",
+                shortDesc: "Organizing tasks efficiently to maximize productivity.",
+                definition: "Time management is the strategic allocation of time to activities and tasks to maximize productivity and achieve goals. It involves prioritization, planning, delegation, and maintaining work-life balance. Effective time management reduces stress, improves quality of work, and creates more opportunities for growth and personal time.",
+                keyPoints: ["Priority matrix techniques", "Goal setting and planning", "Delegation strategies", "Distraction management", "Energy optimization"],
+                realWorldExamples: ["Managing multiple project deadlines", "Balancing meetings and deep work", "Handling interruptions", "Planning daily schedules"],
+                quiz: [
+                    {
+                        question: "What does the Eisenhower Matrix help you identify?",
+                        options: ["Time spent on tasks", "Urgent vs important tasks", "Team responsibilities", "Meeting schedules"],
+                        correct: 1
+                    },
+                    {
+                        question: "What is the Pomodoro Technique?",
+                        options: ["A cooking method", "25-minute focused work intervals", "A meeting structure", "A delegation framework"],
+                        correct: 1
+                    },
+                    {
+                        question: "How should you handle low-priority tasks?",
+                        options: ["Do them first", "Delegate or eliminate them", "Save them for weekends", "Rush through them"],
+                        correct: 1
+                    }
+                ],
+                prompt: "You are a productivity coach. Help me create a personalized daily schedule that incorporates time-blocking, the Pomodoro Technique, and energy management.",
+                xp: 150
+            },
+            {
+                id: 6,
+                level: 2,
+                name: "Critical Thinking",
+                icon: "🔍",
+                color: "from-teal-400 to-blue-500",
+                shortDesc: "Analyzing information objectively to make reasoned judgments.",
+                definition: "Critical thinking is the objective analysis and evaluation of information to form well-reasoned judgments. It involves questioning assumptions, identifying biases, evaluating evidence, and considering alternative perspectives. Critical thinkers make better decisions, solve problems more effectively, and avoid common logical fallacies.",
+                keyPoints: ["Logical reasoning", "Bias recognition", "Evidence evaluation", "Assumption questioning", "Perspective taking"],
+                realWorldExamples: ["Evaluating business proposals", "Analyzing market research", "Making hiring decisions", "Assessing project risks"],
+                quiz: [
+                    {
+                        question: "What is confirmation bias?",
+                        options: ["Confirming facts", "Seeking information that supports existing beliefs", "Double-checking data", "Getting approval from others"],
+                        correct: 1
+                    },
+                    {
+                        question: "What should you do when evaluating evidence?",
+                        options: ["Accept it immediately", "Consider the source and methodology", "Ignore contradictory information", "Only use recent data"],
+                        correct: 1
+                    },
+                    {
+                        question: "How can you improve your critical thinking?",
+                        options: ["Trust your instincts only", "Ask probing questions and seek diverse perspectives", "Avoid complex problems", "Make quick decisions"],
+                        correct: 1
+                    }
+                ],
+                prompt: "As a critical thinking expert, help me analyze a complex business decision by walking through your systematic evaluation process.",
+                xp: 160
+            },
+            {
+                id: 7,
+                level: 3,
+                name: "Leadership",
+                icon: "👑",
+                color: "from-yellow-400 to-orange-500",
+                shortDesc: "Inspiring and guiding others toward success.",
+                definition: "Leadership is the ability to inspire, influence, and guide others toward achieving common goals. It involves creating vision, building trust, making strategic decisions, and developing others. Great leaders adapt their style to situations, empower their teams, lead by example, and create environments where people can thrive and grow.",
+                keyPoints: ["Vision creation and communication", "Team motivation and inspiration", "Strategic decision-making", "Coaching and development", "Change management"],
+                realWorldExamples: ["Leading organizational change", "Mentoring team members", "Setting team vision and goals", "Managing through crises"],
+                quiz: [
+                    {
+                        question: "What distinguishes leadership from management?",
+                        options: ["Authority level", "Inspiring and influencing vs controlling", "Salary differences", "Team size"],
+                        correct: 1
+                    },
+                    {
+                        question: "What is servant leadership?",
+                        options: ["Being submissive", "Serving the team's growth and success", "Doing others' work", "Avoiding difficult decisions"],
+                        correct: 1
+                    },
+                    {
+                        question: "How do effective leaders handle failure?",
+                        options: ["Blame others", "Learn from it and take responsibility", "Hide it from the team", "Give up leadership"],
+                        correct: 1
+                    }
+                ],
+                prompt: "As a leadership coach, help me develop my leadership style by analyzing different leadership approaches and finding what fits my personality and situation.",
+                xp: 200
+            },
+            {
+                id: 8,
+                level: 3,
+                name: "Adaptability",
+                icon: "🔄",
+                color: "from-indigo-400 to-purple-600",
+                shortDesc: "Embracing change and staying flexible in dynamic environments.",
+                definition: "Adaptability is the capacity to adjust quickly and effectively to new situations, technologies, and ways of working. It involves embracing change, learning continuously, and maintaining resilience in the face of uncertainty. Adaptable professionals thrive in dynamic environments and turn challenges into opportunities.",
+                keyPoints: ["Change embracement", "Continuous learning mindset", "Resilience building", "Flexibility in approach", "Innovation and creativity"],
+                realWorldExamples: ["Adapting to remote work", "Learning new technologies", "Pivoting business strategies", "Handling market changes"],
+                quiz: [
+                    {
+                        question: "What mindset best supports adaptability?",
+                        options: ["Fixed mindset", "Growth mindset", "Pessimistic outlook", "Rigid thinking"],
+                        correct: 1
+                    },
+                    {
+                        question: "How should you respond to unexpected changes?",
+                        options: ["Resist immediately", "Stay calm and assess the situation", "Panic and complain", "Ignore the changes"],
+                        correct: 1
+                    },
+                    {
+                        question: "What helps build resilience?",
+                        options: ["Avoiding challenges", "Learning from setbacks and maintaining perspective", "Staying in comfort zone", "Blaming external factors"],
+                        correct: 1
+                    }
+                ],
+                prompt: "As a change management expert, describe 3 recent workplace changes and create an action plan for adapting to each while maintaining team morale.",
+                xp: 200
+            },
+            {
+                id: 9,
+                level: 3,
+                name: "Innovation",
+                icon: "💡",
+                color: "from-cyan-400 to-blue-600",
+                shortDesc: "Creating new ideas and implementing creative solutions.",
+                definition: "Innovation is the process of creating and implementing new ideas, methods, or products that add value. It combines creativity with practical application, involving ideation, experimentation, and execution. Innovative thinking drives progress, solves complex problems, and creates competitive advantages in rapidly changing markets.",
+                keyPoints: ["Creative ideation techniques", "Design thinking process", "Experimentation and prototyping", "Risk assessment and management", "Implementation strategies"],
+                realWorldExamples: ["Developing new products", "Improving processes", "Creating digital solutions", "Solving customer pain points"],
+                quiz: [
+                    {
+                        question: "What is the first stage of the design thinking process?",
+                        options: ["Prototype", "Empathize", "Test", "Define"],
+                        correct: 1
+                    },
+                    {
+                        question: "How should you approach failure in innovation?",
+                        options: ["Avoid it at all costs", "Learn from it and iterate", "Give up immediately", "Blame the process"],
+                        correct: 1
+                    },
+                    {
+                        question: "What encourages innovative thinking?",
+                        options: ["Strict rules and procedures", "Psychological safety and experimentation", "Fear of failure", "Working in isolation"],
+                        correct: 1
+                    }
+                ],
+                prompt: "As an innovation consultant, guide me through developing an innovative solution to a common workplace problem using design thinking methodology.",
+                xp: 220
+            }
+        ];
+
+        // Initialize game
+        function initGame() {
+            createStars();
+            renderSkills();
+            updateUI();
+        }
+
+        // Create background stars
+        function createStars() {
+            const container = document.getElementById('starsContainer');
+            for (let i = 0; i < 150; i++) {
+                const star = document.createElement('div');
+                star.className = 'star';
+                star.style.left = Math.random() * 100 + '%';
+                star.style.top = Math.random() * 100 + '%';
+                star.style.animationDelay = Math.random() * 3 + 's';
+                star.style.animationDuration = (2 + Math.random() * 2) + 's';
+                container.appendChild(star);
+            }
+        }
+
+        // Create particle effects
+        function createParticles(x = 50, y = 50) {
+            const container = document.getElementById('particlesContainer');
+            for (let i = 0; i < 30; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle animate-float';
+                particle.style.left = (x + (Math.random() - 0.5) * 20) + '%';
+                particle.style.top = (y + (Math.random() - 0.5) * 20) + '%';
+                particle.style.animationDelay = Math.random() * 0.3 + 's';
+                particle.style.animationDuration = (1.5 + Math.random()) + 's';
+                container.appendChild(particle);
+                
+                setTimeout(() => particle.remove(), 3000);
+            }
+        }
+
+        // Create confetti
+        function createConfetti() {
+            const container = document.getElementById('confettiContainer');
+            const colors = ['#fbbf24', '#ef4444', '#3b82f6', '#10b981', '#8b5cf6', '#ec4899'];
+            
+            for (let i = 0; i < 100; i++) {
+                const confetti = document.createElement('div');
+                confetti.className = 'confetti-piece animate-confetti';
+                confetti.style.left = Math.random() * 100 + '%';
+                confetti.style.top = -10 + 'px';
+                confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                confetti.style.animationDelay = Math.random() * 0.5 + 's';
+                confetti.style.animationDuration = (2 + Math.random() * 2) + 's';
+                container.appendChild(confetti);
+                
+                setTimeout(() => confetti.remove(), 5000);
+            }
+        }
+
+        // Create ripple effect
+        function createRipple(event) {
+            const ripple = document.createElement('div');
+            ripple.className = 'ripple-effect';
+            
+            const rect = event.currentTarget.getBoundingClientRect();
+            const size = Math.max(rect.width, rect.height);
+            const x = event.clientX - rect.left - size / 2;
+            const y = event.clientY - rect.top - size / 2;
+            
+            ripple.style.width = ripple.style.height = size + 'px';
+            ripple.style.left = x + 'px';
+            ripple.style.top = y + 'px';
+            
+            event.currentTarget.appendChild(ripple);
+            
+            setTimeout(() => ripple.remove(), 600);
+        }
+
+        // Check if skill is unlocked
+        function isSkillUnlocked(skill) {
+            if (skill.level === 1) return true;
+            const previousLevelSkills = skillsData.filter(s => s.level === skill.level - 1);
+            return previousLevelSkills.every(s => gameState.completedSkills.includes(s.id));
+        }
+
+        // Render skills by level
+        function renderSkills() {
+            const container = document.getElementById('skillsContainer');
+            container.innerHTML = '';
+
+            for (let level = 1; level <= 3; level++) {
+                const levelSkills = skillsData.filter(s => s.level === level);
+                const isLevelUnlocked = level === 1 || skillsData.filter(s => s.level === level - 1).every(s => gameState.completedSkills.includes(s.id));
+
+                const levelSection = document.createElement('div');
+                levelSection.className = `mb-12 ${!isLevelUnlocked ? 'opacity-50' : ''} animate-slideInUp`;
+                levelSection.style.animationDelay = (level * 0.1) + 's';
+                const t = translations[gameState.language];
+                let levelDesc = '';
+                if (level === 1) levelDesc = `🌟 ${t.foundationDesc}`;
+                if (level === 2) levelDesc = `🚀 ${t.intermediateDesc}`;
+                if (level === 3) levelDesc = `👑 ${t.expertDesc}`;
+                
+                levelSection.innerHTML = `
+                    <div class="flex items-center gap-4 mb-6">
+                        <div class="text-7xl font-bold ${isLevelUnlocked ? 'text-yellow-400 animate-pulse-custom' : 'text-gray-600'}">
+                            ${level}
+                        </div>
+                        <div>
+                            <h2 class="text-4xl font-bold flex items-center gap-2">
+                                ${t.level} ${level} ${!isLevelUnlocked ? '<span class="text-4xl">🔒</span>' : '<span class="text-4xl animate-wiggle">⭐</span>'}
+                            </h2>
+                            <p class="text-purple-200 text-lg">
+                                ${levelDesc}
+                            </p>
+                        </div>
+                    </div>
+                    <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6" id="level-${level}-skills"></div>
+                `;
+                container.appendChild(levelSection);
+
+                const skillsGrid = document.getElementById(`level-${level}-skills`);
+
+                levelSkills.forEach(skill => {
+                    const isUnlocked = isSkillUnlocked(skill);
+                    const isCompleted = gameState.completedSkills.includes(skill.id);
+                    
+                    const skillCard = document.createElement('div');
+                    skillCard.className = `skill-card bg-gradient-to-br ${skill.color} p-6 rounded-2xl shadow-xl cursor-pointer ${!isUnlocked ? 'locked' : ''} ${isCompleted ? 'completed' : ''}`;
+                    skillCard.onclick = (e) => {
+                        if (isUnlocked) {
+                            createRipple(e);
+                            openSkillModal(skill);
+                        }
+                    };
+                    
+                    const t = translations[gameState.language];
+                    const skillName = getSkillTranslation(skill.id, 'name');
+                    const skillDesc = getSkillTranslation(skill.id, 'shortDesc');
+                    
+                    skillCard.innerHTML = `
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="text-5xl">${skill.icon}</div>
+                            <div>${isCompleted ? '✅' : (isUnlocked ? '' : '🔒')}</div>
+                        </div>
+                        <h3 class="text-2xl font-bold mb-2 text-white">${skillName}</h3>
+                        <p class="text-white/90 mb-4 text-sm">${skillDesc}</p>
+                        <div class="flex justify-between items-center">
+                            <span class="text-yellow-300 font-bold">⭐ ${skill.xp} XP</span>
+                            <span class="text-white/80 text-sm">${isUnlocked ? t.clickExplore : t.completePrevious}</span>
+                        </div>
+                    `;
+                    
+                    skillsGrid.appendChild(skillCard);
+                });
+            }
+        }
+
+        // Sound effects
+        function playSound(type) {
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            let frequency, duration;
+            
+            switch(type) {
+                case 'click':
+                    frequency = 800;
+                    duration = 0.1;
+                    break;
+                case 'correct':
+                    frequency = 600;
+                    duration = 0.3;
+                    break;
+                case 'wrong':
+                    frequency = 200;
+                    duration = 0.5;
+                    break;
+                case 'success':
+                    // Play success melody
+                    [523, 659, 784, 1047].forEach((freq, i) => {
+                        setTimeout(() => {
+                            const osc = audioContext.createOscillator();
+                            const gain = audioContext.createGain();
+                            osc.connect(gain);
+                            gain.connect(audioContext.destination);
+                            osc.frequency.value = freq;
+                            osc.type = 'sine';
+                            gain.gain.setValueAtTime(0.3, audioContext.currentTime);
+                            gain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+                            osc.start(audioContext.currentTime);
+                            osc.stop(audioContext.currentTime + 0.3);
+                        }, i * 150);
+                    });
+                    return;
+                case 'levelup':
+                    // Play level up fanfare
+                    [392, 523, 659, 784, 1047, 1319].forEach((freq, i) => {
+                        setTimeout(() => {
+                            const osc = audioContext.createOscillator();
+                            const gain = audioContext.createGain();
+                            osc.connect(gain);
+                            gain.connect(audioContext.destination);
+                            osc.frequency.value = freq;
+                            osc.type = 'triangle';
+                            gain.gain.setValueAtTime(0.4, audioContext.currentTime);
+                            gain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.4);
+                            osc.start(audioContext.currentTime);
+                            osc.stop(audioContext.currentTime + 0.4);
+                        }, i * 100);
+                    });
+                    return;
+            }
+            
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            oscillator.frequency.value = frequency;
+            oscillator.type = 'sine';
+            
+            gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
+            
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + duration);
+        }
+
+        function openSkillModal(skill) {
+            playSound('click');
+            gameState.currentSkill = skill;
+            const modal = document.getElementById('skillModal');
+            const header = document.getElementById('modalHeader');
+            const icon = document.getElementById('modalIcon');
+            const title = document.getElementById('modalTitle');
+            const level = document.getElementById('modalLevel');
+            const content = document.getElementById('modalContent');
+            
+            header.className = `p-6 rounded-t-3xl relative overflow-hidden bg-gradient-to-br ${skill.color}`;
+            icon.textContent = skill.icon;
+            title.textContent = skill.name;
+            const t = translations[gameState.language];
+            level.textContent = `${t.level} ${skill.level} ${t.skill}`;
+            
+            const isCompleted = gameState.completedSkills.includes(skill.id);
+            const skillName = getSkillTranslation(skill.id, 'name');
+            const skillDef = getSkillTranslation(skill.id, 'definition');
+            const skillKeyPoints = getSkillTranslation(skill.id, 'keyPoints');
+            const skillExamples = getSkillTranslation(skill.id, 'realWorldExamples');
+            
+            content.innerHTML = `
+                <div class="space-y-6">
+                    <div class="bg-blue-50 p-6 rounded-2xl">
+                        <h3 class="text-2xl font-bold text-gray-800 mb-3">📚 ${t.whatIs} ${skillName}?</h3>
+                        <p class="text-gray-700 mb-4">${skillDef}</p>
+                        ${skillKeyPoints ? `
+                            <div class="mt-4">
+                                <h4 class="font-semibold text-gray-800 mb-2">🎯 ${t.keyAreas}</h4>
+                                <ul class="list-disc list-inside text-gray-600 space-y-1">
+                                    ${skillKeyPoints.map(point => `<li>${point}</li>`).join('')}
+                                </ul>
+                            </div>
+                        ` : ''}
+                        ${skillExamples ? `
+                            <div class="mt-4">
+                                <h4 class="font-semibold text-gray-800 mb-2">🌍 ${t.realWorldApps}</h4>
+                                <ul class="list-disc list-inside text-gray-600 space-y-1">
+                                    ${skillExamples.map(example => `<li>${example}</li>`).join('')}
+                                </ul>
+                            </div>
+                        ` : ''}
+                    </div>
+                    
+                    ${!isCompleted ? `
+                        <div class="bg-purple-50 p-6 rounded-2xl">
+                            <h3 class="text-2xl font-bold text-gray-800 mb-4">🧠 ${t.knowledgeCheck}</h3>
+                            <div class="space-y-4">
+                                ${getSkillTranslation(skill.id, 'quiz').map((q, qIndex) => `
+                                    <div class="bg-white p-4 rounded-xl border">
+                                        <h4 class="font-semibold text-gray-800 mb-3">${qIndex + 1}. ${q.question}</h4>
+                                        <div class="space-y-2">
+                                            ${q.options.map((option, oIndex) => `
+                                                <button class="w-full text-left p-3 rounded-lg border-2 border-gray-200 hover:border-purple-300 text-gray-700 transition-all" 
+                                                        onclick="selectAnswer(${qIndex}, ${oIndex})" 
+                                                        id="q${qIndex}_o${oIndex}">
+                                                    ${String.fromCharCode(65 + oIndex)}. ${option}
+                                                </button>
+                                            `).join('')}
+                                        </div>
+                                        <div id="feedback_${qIndex}" class="mt-3 hidden"></div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                            <button onclick="submitQuiz()" class="btn-complete w-full mt-6 py-4 px-6 text-white font-bold rounded-xl hover:scale-105 transition-transform">
+                                ${t.completeChallenge} 🚀
+                            </button>
+                        </div>
+                    ` : `
+                        <div class="bg-green-50 p-6 rounded-2xl text-center">
+                            <div class="text-6xl mb-4 animate-bounce">🎉</div>
+                            <h3 class="text-2xl font-bold text-green-800 mb-2">${t.skillMastered}</h3>
+                            <p class="text-green-700 text-lg">${t.earnedXP} <span class="font-bold text-yellow-600">${skill.xp} XP</span>!</p>
+                        </div>
+                    `}
+                </div>
+            `;
+            
+            modal.classList.remove('hidden');
+        }
+
+        function closeModal() {
+            document.getElementById('skillModal').classList.add('hidden');
+        }
+
+        function selectAnswer(questionIndex, optionIndex) {
+            playSound('click');
+            gameState.quizAnswers = gameState.quizAnswers || {};
+            gameState.quizAnswers[questionIndex] = optionIndex;
+            
+            const skill = gameState.currentSkill;
+            skill.quiz[questionIndex].options.forEach((_, oIndex) => {
+                const btn = document.getElementById(`q${questionIndex}_o${oIndex}`);
+                if (oIndex === optionIndex) {
+                    btn.classList.add('border-purple-500', 'bg-purple-100', 'transform', 'scale-105');
+                } else {
+                    btn.classList.remove('border-purple-500', 'bg-purple-100', 'transform', 'scale-105');
+                }
+            });
+        }
+
+        function submitQuiz() {
+            const skill = gameState.currentSkill;
+            let correctAnswers = 0;
+            
+            skill.quiz.forEach((question, qIndex) => {
+                const userAnswer = gameState.quizAnswers[qIndex];
+                const correctAnswer = question.correct;
+                const isCorrect = userAnswer === correctAnswer;
+                
+                if (isCorrect) {
+                    correctAnswers++;
+                    playSound('correct');
+                } else {
+                    playSound('wrong');
+                }
+                
+                const feedbackDiv = document.getElementById(`feedback_${qIndex}`);
+                feedbackDiv.classList.remove('hidden');
+                
+                const t = translations[gameState.language];
+                if (isCorrect) {
+                    feedbackDiv.innerHTML = `<div class="text-green-600 font-semibold animate-pulse">✅ ${t.correct}</div>`;
+                } else {
+                    feedbackDiv.innerHTML = `<div class="text-red-600 font-semibold">❌ ${t.incorrect} <span class="font-bold">${question.options[correctAnswer]}</span></div>`;
+                }
+                
+                // Update button colors
+                question.options.forEach((_, oIndex) => {
+                    const btn = document.getElementById(`q${qIndex}_o${oIndex}`);
+                    btn.disabled = true;
+                    
+                    if (oIndex === correctAnswer) {
+                        btn.classList.add('border-green-500', 'bg-green-100', 'text-green-800');
+                    } else if (oIndex === userAnswer && userAnswer !== correctAnswer) {
+                        btn.classList.add('border-red-500', 'bg-red-100', 'text-red-800');
+                    }
+                });
+            });
+            
+            const passed = correctAnswers >= Math.ceil(skill.quiz.length / 2);
+            
+            setTimeout(() => {
+                if (passed && !gameState.completedSkills.includes(skill.id)) {
+                    playSound('success');
+                    gameState.completedSkills.push(skill.id);
+                    gameState.totalXP += skill.xp;
+                    
+                    const newLevel = Math.floor(gameState.totalXP / 400) + 1;
+                    if (newLevel > gameState.currentLevel) {
+                        gameState.currentLevel = newLevel;
+                        playSound('levelup');
+                        createConfetti();
+                    }
+                    
+                    updateUI();
+                    renderSkills();
+                    
+                    setTimeout(() => {
+                        const t = translations[gameState.language];
+                        const skillName = getSkillTranslation(skill.id, 'name');
+                        alert(`🎉 ${t.outstanding} ${skillName} ${t.andEarned} ${skill.xp} XP! ${t.score} ${correctAnswers}/${skill.quiz.length}`);
+                        closeModal();
+                    }, 1000);
+                } else if (!passed) {
+                    const t = translations[gameState.language];
+                    alert(`${t.score} ${correctAnswers}/${skill.quiz.length}. ${t.needCorrect} ${Math.ceil(skill.quiz.length / 2)} ${t.correctAnswers}`);
+                    setTimeout(() => {
+                        gameState.quizAnswers = {};
+                        openSkillModal(skill);
+                    }, 2000);
+                }
+            }, 1500);
+        }
+
+        function updateUI() {
+            document.getElementById('totalXP').textContent = gameState.totalXP;
+            document.getElementById('currentLevel').textContent = gameState.currentLevel;
+            
+            const progressInLevel = gameState.totalXP % 400;
+            const progressPercentage = (progressInLevel / 400) * 100;
+            
+            document.getElementById('progressBar').style.width = progressPercentage + '%';
+            document.getElementById('progressText').textContent = `${progressInLevel}/400 XP to Level ${gameState.currentLevel + 1}`;
+        }
+
+        // Page navigation
+        function showPage(page) {
+            playSound('click');
+            const gamePage = document.getElementById('gamePage');
+            const mapPage = document.getElementById('mapPage');
+            const gameBtn = document.getElementById('gameBtn');
+            const mapBtn = document.getElementById('mapBtn');
+            
+            if (page === 'game') {
+                gamePage.classList.remove('hidden');
+                mapPage.classList.add('hidden');
+                gameBtn.classList.add('bg-purple-600');
+                gameBtn.classList.remove('bg-gray-600');
+                mapBtn.classList.add('bg-gray-600');
+                mapBtn.classList.remove('bg-indigo-600');
+            } else {
+                gamePage.classList.add('hidden');
+                mapPage.classList.remove('hidden');
+                mapBtn.classList.add('bg-indigo-600');
+                mapBtn.classList.remove('bg-gray-600');
+                gameBtn.classList.add('bg-gray-600');
+                gameBtn.classList.remove('bg-purple-600');
+                renderMap();
+            }
+        }
+
+        // Render interactive map
+        function renderMap() {
+            const mapContainer = document.getElementById('skillsMap');
+            const statsContainer = document.getElementById('mapStats');
+            const insightsContainer = document.getElementById('skillInsights');
+            const nextStepsContainer = document.getElementById('nextSteps');
+            
+            // Create skill nodes with connections
+            mapContainer.innerHTML = `
+                <svg viewBox="0 0 800 600" class="w-full h-full">
+                    <!-- Background grid -->
+                    <defs>
+                        <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+                            <path d="M 40 0 L 0 0 0 40" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="1"/>
+                        </pattern>
+                    </defs>
+                    <rect width="100%" height="100%" fill="url(#grid)" />
+                    
+                    <!-- Skill connections -->
+                    ${renderSkillConnections()}
+                    
+                    <!-- Skill nodes -->
+                    ${renderSkillNodes()}
+                </svg>
+            `;
+            
+            // Update stats
+            const completedCount = gameState.completedSkills.length;
+            const totalSkills = skillsData.length;
+            const completionRate = Math.round((completedCount / totalSkills) * 100);
+            const t = translations[gameState.language];
+            
+            // Update map page titles
+            document.getElementById('mapTitle').textContent = t.mapTitle;
+            document.getElementById('mapSubtitle').textContent = t.mapSubtitle;
+            document.getElementById('progressTitle').textContent = t.yourProgress;
+            document.getElementById('insightsTitle').textContent = t.skillInsights;
+            document.getElementById('nextStepsTitle').textContent = t.nextSteps;
+            const journeyPathEl = document.getElementById('journeyPathTitle');
+            if (journeyPathEl) journeyPathEl.textContent = t.journeyPath;
+            
+            statsContainer.innerHTML = `
+                <div class="space-y-4">
+                    <div class="flex justify-between items-center">
+                        <span class="text-white/80">${t.skillsMastered}</span>
+                        <span class="text-yellow-400 font-bold">${completedCount}/${totalSkills}</span>
+                    </div>
+                    <div class="w-full bg-gray-700 rounded-full h-3">
+                        <div class="bg-gradient-to-r from-green-400 to-emerald-500 h-3 rounded-full transition-all duration-700" style="width: ${completionRate}%"></div>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-white/80">${t.completionRate}</span>
+                        <span class="text-green-400 font-bold">${completionRate}%</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-white/80">${t.totalXP}</span>
+                        <span class="text-yellow-400 font-bold">${gameState.totalXP}</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-white/80">${t.currentLevel}</span>
+                        <span class="text-purple-400 font-bold">${gameState.currentLevel}</span>
+                    </div>
+                </div>
+            `;
+            
+            // Skill insights
+            const skillsByLevel = {
+                1: skillsData.filter(s => s.level === 1),
+                2: skillsData.filter(s => s.level === 2),
+                3: skillsData.filter(s => s.level === 3)
+            };
+            
+            insightsContainer.innerHTML = `
+                <div class="space-y-3 text-sm">
+                    <div class="p-3 bg-blue-500/20 rounded-lg">
+                        <div class="font-semibold text-blue-300">${t.foundationLevel}</div>
+                        <div class="text-white/70">${skillsByLevel[1].filter(s => gameState.completedSkills.includes(s.id)).length}/${skillsByLevel[1].length} completed</div>
+                        <div class="text-xs text-white/50 mt-1">${t.essentialSkills}</div>
+                    </div>
+                    <div class="p-3 bg-purple-500/20 rounded-lg">
+                        <div class="font-semibold text-purple-300">${t.intermediateLevel}</div>
+                        <div class="text-white/70">${skillsByLevel[2].filter(s => gameState.completedSkills.includes(s.id)).length}/${skillsByLevel[2].length} completed</div>
+                        <div class="text-xs text-white/50 mt-1">${t.advancedSkills}</div>
+                    </div>
+                    <div class="p-3 bg-yellow-500/20 rounded-lg">
+                        <div class="font-semibold text-yellow-300">${t.expertLevel}</div>
+                        <div class="text-white/70">${skillsByLevel[3].filter(s => gameState.completedSkills.includes(s.id)).length}/${skillsByLevel[3].length} completed</div>
+                        <div class="text-xs text-white/50 mt-1">${t.leadershipSkills}</div>
+                    </div>
+                </div>
+            `;
+            
+            // Next steps
+            const nextSkill = getNextRecommendedSkill();
+            nextStepsContainer.innerHTML = `
+                <div class="space-y-3">
+                    ${nextSkill ? `
+                        <div class="p-4 bg-gradient-to-r from-green-500/20 to-emerald-500/20 rounded-lg border border-green-500/30">
+                            <div class="flex items-center gap-2 mb-2">
+                                <span class="text-2xl">${nextSkill.icon}</span>
+                                <span class="font-semibold text-green-300">${getSkillTranslation(nextSkill.id, 'name')}</span>
+                            </div>
+                            <p class="text-white/70 text-sm mb-2">${getSkillTranslation(nextSkill.id, 'shortDesc')}</p>
+                            <button onclick="showPage('game'); setTimeout(() => openSkillModal(skillsData.find(s => s.id === ${nextSkill.id})), 500)" 
+                                    class="text-green-400 hover:text-green-300 text-sm font-semibold">
+                                ${t.startLearning}
+                            </button>
+                        </div>
+                    ` : `
+                        <div class="p-4 bg-gradient-to-r from-gold-500/20 to-yellow-500/20 rounded-lg border border-yellow-500/30 text-center">
+                            <div class="text-4xl mb-2">🏆</div>
+                            <div class="font-bold text-yellow-300 mb-1">${t.congratulations}</div>
+                            <div class="text-white/70 text-sm">${t.allSkillsMastered}</div>
+                        </div>
+                    `}
+                    
+                    <div class="space-y-2">
+                        <div class="text-white/60 text-sm font-semibold">${t.learningTips}</div>
+                        <ul class="text-white/50 text-xs space-y-1">
+                            <li>• ${t.tip1}</li>
+                            <li>• ${t.tip2}</li>
+                            <li>• ${t.tip3}</li>
+                            <li>• ${t.tip4}</li>
+                        </ul>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSkillConnections() {
+            const positions = getSkillPositions();
+            let connections = '';
+            
+            // Draw connections between related skills
+            const skillConnections = [
+                [1, 2], [1, 3], [2, 4], [3, 4], [3, 6], [4, 5], [4, 7], [5, 8], [6, 7], [7, 8], [7, 9], [8, 9]
+            ];
+            
+            skillConnections.forEach(([from, to]) => {
+                const fromPos = positions[from];
+                const toPos = positions[to];
+                if (fromPos && toPos) {
+                    const isActive = gameState.completedSkills.includes(from) && gameState.completedSkills.includes(to);
+                    connections += `
+                        <line x1="${fromPos.x}" y1="${fromPos.y}" x2="${toPos.x}" y2="${toPos.y}" 
+                              stroke="${isActive ? '#10b981' : 'rgba(255,255,255,0.2)'}" 
+                              stroke-width="${isActive ? '3' : '1'}" 
+                              stroke-dasharray="${isActive ? '0' : '5,5'}" />
+                    `;
+                }
+            });
+            
+            return connections;
+        }
+
+        function renderSkillNodes() {
+            const positions = getSkillPositions();
+            let nodes = '';
+            
+            skillsData.forEach(skill => {
+                const pos = positions[skill.id];
+                if (pos) {
+                    const isCompleted = gameState.completedSkills.includes(skill.id);
+                    const isUnlocked = isSkillUnlocked(skill);
+                    
+                    nodes += `
+                        <g class="skill-node cursor-pointer" onclick="openSkillFromMap(${skill.id})">
+                            <circle cx="${pos.x}" cy="${pos.y}" r="25" 
+                                    fill="${isCompleted ? '#10b981' : isUnlocked ? '#6366f1' : '#6b7280'}" 
+                                    stroke="${isCompleted ? '#059669' : isUnlocked ? '#4f46e5' : '#4b5563'}" 
+                                    stroke-width="3" 
+                                    class="transition-all duration-300 hover:r-30" />
+                            <text x="${pos.x}" y="${pos.y + 5}" text-anchor="middle" 
+                                  font-size="20" fill="white">${skill.icon}</text>
+                            <text x="${pos.x}" y="${pos.y + 45}" text-anchor="middle" 
+                                  font-size="12" fill="white" font-weight="bold">${getSkillTranslation(skill.id, 'name')}</text>
+                            ${isCompleted ? `<text x="${pos.x + 20}" y="${pos.y - 20}" font-size="16" fill="#10b981">✓</text>` : ''}
+                        </g>
+                    `;
+                }
+            });
+            
+            return nodes;
+        }
+
+        function getSkillPositions() {
+            return {
+                1: {x: 150, y: 150}, // Communication
+                2: {x: 350, y: 120}, // Teamwork  
+                3: {x: 250, y: 250}, // Emotional Intelligence
+                4: {x: 450, y: 200}, // Problem-Solving
+                5: {x: 550, y: 150}, // Time Management
+                6: {x: 650, y: 250}, // Critical Thinking
+                7: {x: 400, y: 350}, // Leadership
+                8: {x: 200, y: 400}, // Adaptability
+                9: {x: 600, y: 400}  // Innovation
+            };
+        }
+
+        function openSkillFromMap(skillId) {
+            playSound('click');
+            const skill = skillsData.find(s => s.id === skillId);
+            if (skill && isSkillUnlocked(skill)) {
+                showPage('game');
+                setTimeout(() => openSkillModal(skill), 300);
+            }
+        }
+
+        function getNextRecommendedSkill() {
+            return skillsData.find(skill => 
+                !gameState.completedSkills.includes(skill.id) && isSkillUnlocked(skill)
+            );
+        }
+
+        // Language functions
+        function changeLanguage(lang) {
+            if (gameState.language !== 'en') playSound('click');
+            gameState.language = lang;
+            
+            // Update language buttons
+            ['en', 'fr', 'ar'].forEach(l => {
+                const btn = document.getElementById(`lang${l.toUpperCase()}`);
+                if (btn) {
+                    if (l === lang) {
+                        btn.classList.remove('bg-gray-600');
+                        btn.classList.add('bg-blue-600');
+                    } else {
+                        btn.classList.remove('bg-blue-600');
+                        btn.classList.add('bg-gray-600');
+                    }
+                }
+            });
+            
+            // Update text direction for Arabic
+            document.body.dir = lang === 'ar' ? 'rtl' : 'ltr';
+            
+            updateLanguageText();
+            renderSkills();
+            const mapPage = document.getElementById('mapPage');
+            if (mapPage && !mapPage.classList.contains('hidden')) {
+                renderMap();
+            }
+        }
+
+        function updateLanguageText() {
+            const t = translations[gameState.language];
+            
+            // Update header
+            const titleEl = document.querySelector('.gradient-text');
+            const subtitleEl = document.querySelector('.text-purple-200');
+            if (titleEl) titleEl.textContent = t.title;
+            if (subtitleEl) subtitleEl.textContent = t.subtitle;
+            
+            // Update navigation
+            const navGameEl = document.getElementById('navGame');
+            const navMapEl = document.getElementById('navMap');
+            const downloadBtnEl = document.getElementById('downloadBtn');
+            if (navGameEl) navGameEl.textContent = t.navGame;
+            if (navMapEl) navMapEl.textContent = t.navMap;
+            if (downloadBtnEl) downloadBtnEl.textContent = t.downloadBtn;
+            
+            // Update map page elements if they exist
+            const mapTitleEl = document.getElementById('mapTitle');
+            const mapSubtitleEl = document.getElementById('mapSubtitle');
+            const progressTitleEl = document.getElementById('progressTitle');
+            const insightsTitleEl = document.getElementById('insightsTitle');
+            const nextStepsTitleEl = document.getElementById('nextStepsTitle');
+            
+            if (mapTitleEl) mapTitleEl.textContent = t.mapTitle;
+            if (mapSubtitleEl) mapSubtitleEl.textContent = t.mapSubtitle;
+            if (progressTitleEl) progressTitleEl.textContent = t.yourProgress;
+            if (insightsTitleEl) insightsTitleEl.textContent = t.skillInsights;
+            if (nextStepsTitleEl) nextStepsTitleEl.textContent = t.nextSteps;
+        }
+
+        // PDF Generation
+        function downloadPDF() {
+            playSound('click');
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            const t = translations[gameState.language];
+            
+            // Clean text function to remove emojis and special characters
+            function cleanText(text) {
+                return text.replace(/[\u{1F600}-\u{1F64F}]|[\u{1F300}-\u{1F5FF}]|[\u{1F680}-\u{1F6FF}]|[\u{1F1E0}-\u{1F1FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]/gu, '').trim();
+            }
+            
+            // Professional header with company-style design
+            doc.setFillColor(67, 56, 202); // Indigo
+            doc.rect(0, 0, 210, 50, 'F');
+            
+            // Add decorative elements
+            doc.setFillColor(99, 102, 241); // Lighter indigo
+            doc.circle(190, 15, 8, 'F');
+            doc.circle(200, 25, 6, 'F');
+            doc.circle(185, 35, 4, 'F');
+            
+            doc.setTextColor(255, 255, 255);
+            doc.setFontSize(28);
+            doc.setFont('helvetica', 'bold');
+            doc.text(cleanText(t.title), 20, 25);
+            
+            doc.setFontSize(14);
+            doc.setFont('helvetica', 'normal');
+            doc.text('Professional Skills Assessment Report', 20, 35);
+            
+            doc.setFontSize(10);
+            doc.text(`Generated: ${new Date().toLocaleDateString()}`, 20, 42);
+            
+            // Executive Summary Section
+            let yPos = 70;
+            doc.setFillColor(248, 250, 252); // Light gray background
+            doc.rect(15, yPos - 10, 180, 35, 'F');
+            doc.setDrawColor(203, 213, 225);
+            doc.rect(15, yPos - 10, 180, 35, 'S');
+            
+            doc.setTextColor(30, 41, 59);
+            doc.setFontSize(18);
+            doc.setFont('helvetica', 'bold');
+            doc.text('EXECUTIVE SUMMARY', 20, yPos);
+            
+            const completedCount = gameState.completedSkills.length;
+            const totalSkills = skillsData.length;
+            const completionRate = Math.round((completedCount / totalSkills) * 100);
+            
+            doc.setFontSize(12);
+            doc.setFont('helvetica', 'normal');
+            doc.setTextColor(71, 85, 105);
+            
+            const summaryText = [
+                `Skills Mastered: ${completedCount} out of ${totalSkills} (${completionRate}% completion)`,
+                `Experience Points: ${gameState.totalXP} XP`,
+                `Current Level: ${gameState.currentLevel}`,
+                `Assessment Status: ${completionRate >= 80 ? 'Excellent' : completionRate >= 60 ? 'Good' : completionRate >= 40 ? 'Developing' : 'Beginner'}`
+            ];
+            
+            summaryText.forEach((text, index) => {
+                doc.text(text, 20, yPos + 10 + (index * 5));
+            });
+            
+            yPos += 50;
+            
+            // Skills Breakdown Section
+            doc.setFillColor(67, 56, 202);
+            doc.rect(15, yPos - 5, 180, 8, 'F');
+            doc.setTextColor(255, 255, 255);
+            doc.setFontSize(14);
+            doc.setFont('helvetica', 'bold');
+            doc.text('SKILLS BREAKDOWN BY LEVEL', 20, yPos);
+            
+            yPos += 15;
+            
+            const skillsByLevel = {
+                1: skillsData.filter(s => s.level === 1),
+                2: skillsData.filter(s => s.level === 2),
+                3: skillsData.filter(s => s.level === 3)
+            };
+            
+            const levelData = [
+                { name: 'Foundation Level', skills: skillsByLevel[1], color: [59, 130, 246] },
+                { name: 'Intermediate Level', skills: skillsByLevel[2], color: [139, 92, 246] },
+                { name: 'Expert Level', skills: skillsByLevel[3], color: [245, 158, 11] }
+            ];
+            
+            levelData.forEach((level, index) => {
+                const completed = level.skills.filter(s => gameState.completedSkills.includes(s.id)).length;
+                const total = level.skills.length;
+                const percentage = Math.round((completed / total) * 100);
+                
+                // Level header
+                doc.setFillColor(level.color[0], level.color[1], level.color[2]);
+                doc.rect(20, yPos - 3, 170, 15, 'F');
+                doc.setTextColor(255, 255, 255);
+                doc.setFontSize(12);
+                doc.setFont('helvetica', 'bold');
+                doc.text(level.name, 25, yPos + 5);
+                doc.text(`${completed}/${total} (${percentage}%)`, 160, yPos + 5);
+                
+                yPos += 20;
+                
+                // Progress bar
+                doc.setFillColor(229, 231, 235);
+                doc.rect(25, yPos - 8, 140, 4, 'F');
+                doc.setFillColor(level.color[0], level.color[1], level.color[2]);
+                doc.rect(25, yPos - 8, (140 * percentage / 100), 4, 'F');
+                
+                yPos += 10;
+            });
+            
+            yPos += 10;
+            
+            // Mastered Skills Section
+            if (gameState.completedSkills.length > 0) {
+                doc.setFillColor(34, 197, 94);
+                doc.rect(15, yPos - 5, 180, 8, 'F');
+                doc.setTextColor(255, 255, 255);
+                doc.setFontSize(14);
+                doc.setFont('helvetica', 'bold');
+                doc.text('MASTERED SKILLS', 20, yPos);
+                
+                yPos += 15;
+                doc.setTextColor(21, 128, 61);
+                doc.setFontSize(11);
+                doc.setFont('helvetica', 'normal');
+                
+                gameState.completedSkills.forEach((skillId, index) => {
+                    const skill = skillsData.find(s => s.id === skillId);
+                    if (skill) {
+                        // Skill entry with clean formatting
+                        doc.setFillColor(240, 253, 244);
+                        doc.rect(20, yPos - 3, 170, 10, 'F');
+                        doc.setDrawColor(187, 247, 208);
+                        doc.rect(20, yPos - 3, 170, 10, 'S');
+                        
+                        doc.text(`${index + 1}. ${cleanText(skill.name)}`, 25, yPos + 3);
+                        doc.text(`Level ${skill.level}`, 120, yPos + 3);
+                        doc.text(`${skill.xp} XP`, 160, yPos + 3);
+                        
+                        yPos += 12;
+                        
+                        if (yPos > 270) {
+                            doc.addPage();
+                            yPos = 30;
+                        }
+                    }
+                });
+            }
+            
+            // Professional Footer
+            const pageCount = doc.internal.getNumberOfPages();
+            for (let i = 1; i <= pageCount; i++) {
+                doc.setPage(i);
+                doc.setFillColor(67, 56, 202);
+                doc.rect(0, 285, 210, 12, 'F');
+                doc.setTextColor(255, 255, 255);
+                doc.setFontSize(8);
+                doc.text('Soft Skills Quest - Professional Development Platform', 20, 292);
+                doc.text(`Page ${i} of ${pageCount}`, 180, 292);
+            }
+            
+            // Save with professional filename
+            const date = new Date().toISOString().split('T')[0];
+            const fileName = `SoftSkills-Assessment-Report-${date}.pdf`;
+            doc.save(fileName);
+            
+            playSound('success');
+            
+            // Show success message
+            setTimeout(() => {
+                alert(`Professional report generated successfully!\nFilename: ${fileName}\nCompletion Rate: ${completionRate}%`);
+            }, 500);
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            initGame();
+            // Set initial language
+            changeLanguage('en');
+        });
+    </script>
+</body>
+</html>
