@@ -1158,7 +1158,7 @@
             }
         }
 
-        // Sound effects
+        // Enhanced sound effects with map sounds
         function playSound(type) {
             const audioContext = new (window.AudioContext || window.webkitAudioContext)();
             let frequency, duration;
@@ -1176,6 +1176,44 @@
                     frequency = 200;
                     duration = 0.5;
                     break;
+                case 'mapHover':
+                    // Gentle chime for map hover
+                    frequency = 1200;
+                    duration = 0.2;
+                    break;
+                case 'pathUnlock':
+                    // Magical path unlock sound
+                    [440, 554, 659, 880].forEach((freq, i) => {
+                        setTimeout(() => {
+                            const osc = audioContext.createOscillator();
+                            const gain = audioContext.createGain();
+                            osc.connect(gain);
+                            gain.connect(audioContext.destination);
+                            osc.frequency.value = freq;
+                            osc.type = 'sine';
+                            gain.gain.setValueAtTime(0.2, audioContext.currentTime);
+                            gain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.4);
+                            osc.start(audioContext.currentTime);
+                            osc.stop(audioContext.currentTime + 0.4);
+                        }, i * 80);
+                    });
+                    return;
+                case 'ambient':
+                    // Ambient forest/nature sound
+                    const frequencies = [220, 330, 440, 550];
+                    frequencies.forEach((freq, i) => {
+                        const osc = audioContext.createOscillator();
+                        const gain = audioContext.createGain();
+                        osc.connect(gain);
+                        gain.connect(audioContext.destination);
+                        osc.frequency.value = freq + Math.random() * 20;
+                        osc.type = 'sine';
+                        gain.gain.setValueAtTime(0.05, audioContext.currentTime);
+                        gain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 3);
+                        osc.start(audioContext.currentTime + i * 0.5);
+                        osc.stop(audioContext.currentTime + 3 + i * 0.5);
+                    });
+                    return;
                 case 'success':
                     // Play success melody
                     [523, 659, 784, 1047].forEach((freq, i) => {
@@ -1226,6 +1264,22 @@
             
             oscillator.start(audioContext.currentTime);
             oscillator.stop(audioContext.currentTime + duration);
+        }
+
+        // Create floating map particles
+        function createMapParticles() {
+            const container = document.getElementById('particlesContainer');
+            for (let i = 0; i < 15; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'absolute w-2 h-2 bg-yellow-400 rounded-full opacity-60';
+                particle.style.left = Math.random() * 100 + '%';
+                particle.style.top = Math.random() * 100 + '%';
+                particle.style.animation = `float-gentle ${3 + Math.random() * 2}s ease-in-out infinite`;
+                particle.style.animationDelay = Math.random() * 2 + 's';
+                container.appendChild(particle);
+                
+                setTimeout(() => particle.remove(), 10000);
+            }
         }
 
         function openSkillModal(skill) {
@@ -1441,29 +1495,86 @@
             }
         }
 
-        // Render interactive map
+        // Render interactive map with terrain
         function renderMap() {
             const mapContainer = document.getElementById('skillsMap');
             const statsContainer = document.getElementById('mapStats');
             const insightsContainer = document.getElementById('skillInsights');
             const nextStepsContainer = document.getElementById('nextSteps');
             
-            // Create skill nodes with connections
+            // Play ambient sounds and create particles
+            playSound('ambient');
+            createMapParticles();
+            
+            // Create realistic skill world map
             mapContainer.innerHTML = `
                 <svg viewBox="0 0 800 600" class="w-full h-full">
-                    <!-- Background grid -->
                     <defs>
-                        <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
-                            <path d="M 40 0 L 0 0 0 40" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="1"/>
-                        </pattern>
+                        <!-- Terrain gradients -->
+                        <radialGradient id="mountain" cx="50%" cy="30%" r="70%">
+                            <stop offset="0%" style="stop-color:#8B7355;stop-opacity:1" />
+                            <stop offset="100%" style="stop-color:#5D4E37;stop-opacity:1" />
+                        </radialGradient>
+                        <linearGradient id="river" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" style="stop-color:#3B82F6;stop-opacity:0.8" />
+                            <stop offset="100%" style="stop-color:#1E40AF;stop-opacity:0.6" />
+                        </linearGradient>
+                        <radialGradient id="forest" cx="50%" cy="50%" r="60%">
+                            <stop offset="0%" style="stop-color:#22C55E;stop-opacity:0.7" />
+                            <stop offset="100%" style="stop-color:#15803D;stop-opacity:0.5" />
+                        </radialGradient>
+                        <!-- Animated path gradient -->
+                        <linearGradient id="animatedPath" x1="0%" y1="0%" x2="100%" y2="0%">
+                            <stop offset="0%" style="stop-color:#FCD34D;stop-opacity:0.8">
+                                <animate attributeName="stop-opacity" values="0.3;0.8;0.3" dur="2s" repeatCount="indefinite"/>
+                            </stop>
+                            <stop offset="50%" style="stop-color:#F59E0B;stop-opacity:1">
+                                <animate attributeName="stop-opacity" values="0.5;1;0.5" dur="2s" repeatCount="indefinite"/>
+                            </stop>
+                            <stop offset="100%" style="stop-color:#FCD34D;stop-opacity:0.8">
+                                <animate attributeName="stop-opacity" values="0.3;0.8;0.3" dur="2s" repeatCount="indefinite"/>
+                            </stop>
+                        </linearGradient>
+                        <!-- Glowing effect for completed skills -->
+                        <filter id="glow">
+                            <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+                            <feMerge> 
+                                <feMergeNode in="coloredBlur"/>
+                                <feMergeNode in="SourceGraphic"/>
+                            </feMerge>
+                        </filter>
                     </defs>
-                    <rect width="100%" height="100%" fill="url(#grid)" />
                     
-                    <!-- Skill connections -->
-                    ${renderSkillConnections()}
+                    <!-- Terrain background -->
+                    <rect width="100%" height="100%" fill="#1E293B" />
                     
-                    <!-- Skill nodes -->
-                    ${renderSkillNodes()}
+                    <!-- Mountains (Level 3 area) -->
+                    <ellipse cx="500" cy="150" rx="180" ry="80" fill="url(#mountain)" opacity="0.6"/>
+                    <ellipse cx="550" cy="120" rx="120" ry="50" fill="url(#mountain)" opacity="0.4"/>
+                    
+                    <!-- Forest areas (Level 1 & 2) -->
+                    <circle cx="200" cy="200" r="100" fill="url(#forest)"/>
+                    <circle cx="400" cy="250" r="80" fill="url(#forest)"/>
+                    <circle cx="300" cy="350" r="90" fill="url(#forest)"/>
+                    
+                    <!-- Animated river connecting areas -->
+                    <path d="M 100 180 Q 250 220 400 200 Q 550 180 700 220 Q 650 350 500 380 Q 350 400 200 380" 
+                          stroke="url(#river)" stroke-width="12" fill="none" opacity="0.7">
+                        <animate attributeName="stroke-dasharray" values="0,1000;1000,0" dur="8s" repeatCount="indefinite"/>
+                    </path>
+                    
+                    <!-- Floating islands for expert skills -->
+                    <ellipse cx="600" cy="400" rx="60" ry="25" fill="#6366F1" opacity="0.3"/>
+                    <ellipse cx="200" cy="450" rx="50" ry="20" fill="#8B5CF6" opacity="0.3"/>
+                    
+                    <!-- Skill connections with animated paths -->
+                    ${renderEnhancedConnections()}
+                    
+                    <!-- Skill nodes with terrain integration -->
+                    ${renderEnhancedNodes()}
+                    
+                    <!-- Animated weather effects -->
+                    ${renderWeatherEffects()}
                 </svg>
             `;
             
@@ -1570,11 +1681,11 @@
             `;
         }
 
-        function renderSkillConnections() {
+        function renderEnhancedConnections() {
             const positions = getSkillPositions();
             let connections = '';
             
-            // Draw connections between related skills
+            // Draw connections between related skills with enhanced visuals
             const skillConnections = [
                 [1, 2], [1, 3], [2, 4], [3, 4], [3, 6], [4, 5], [4, 7], [5, 8], [6, 7], [7, 8], [7, 9], [8, 9]
             ];
@@ -1584,19 +1695,38 @@
                 const toPos = positions[to];
                 if (fromPos && toPos) {
                     const isActive = gameState.completedSkills.includes(from) && gameState.completedSkills.includes(to);
-                    connections += `
-                        <line x1="${fromPos.x}" y1="${fromPos.y}" x2="${toPos.x}" y2="${toPos.y}" 
-                              stroke="${isActive ? '#10b981' : 'rgba(255,255,255,0.2)'}" 
-                              stroke-width="${isActive ? '3' : '1'}" 
-                              stroke-dasharray="${isActive ? '0' : '5,5'}" />
-                    `;
+                    const isPartiallyActive = gameState.completedSkills.includes(from) || gameState.completedSkills.includes(to);
+                    
+                    if (isActive) {
+                        // Glowing animated path for completed connections
+                        connections += `
+                            <line x1="${fromPos.x}" y1="${fromPos.y}" x2="${toPos.x}" y2="${toPos.y}" 
+                                  stroke="url(#animatedPath)" stroke-width="6" filter="url(#glow)">
+                                <animate attributeName="stroke-width" values="4;8;4" dur="3s" repeatCount="indefinite"/>
+                            </line>
+                        `;
+                    } else if (isPartiallyActive) {
+                        // Pulsing path for partially unlocked connections
+                        connections += `
+                            <line x1="${fromPos.x}" y1="${fromPos.y}" x2="${toPos.x}" y2="${toPos.y}" 
+                                  stroke="#FCD34D" stroke-width="3" stroke-dasharray="10,5" opacity="0.6">
+                                <animate attributeName="stroke-dashoffset" values="0;15" dur="2s" repeatCount="indefinite"/>
+                            </line>
+                        `;
+                    } else {
+                        // Faded path for locked connections
+                        connections += `
+                            <line x1="${fromPos.x}" y1="${fromPos.y}" x2="${toPos.x}" y2="${toPos.y}" 
+                                  stroke="rgba(255,255,255,0.15)" stroke-width="2" stroke-dasharray="5,10" />
+                        `;
+                    }
                 }
             });
             
             return connections;
         }
 
-        function renderSkillNodes() {
+        function renderEnhancedNodes() {
             const positions = getSkillPositions();
             let nodes = '';
             
@@ -1606,18 +1736,67 @@
                     const isCompleted = gameState.completedSkills.includes(skill.id);
                     const isUnlocked = isSkillUnlocked(skill);
                     
+                    // Enhanced node with terrain-appropriate styling
+                    const nodeColor = isCompleted ? '#10b981' : isUnlocked ? '#6366f1' : '#6b7280';
+                    const glowColor = isCompleted ? '#34d399' : isUnlocked ? '#818cf8' : '#9ca3af';
+                    
                     nodes += `
-                        <g class="skill-node cursor-pointer" onclick="openSkillFromMap(${skill.id})">
-                            <circle cx="${pos.x}" cy="${pos.y}" r="25" 
-                                    fill="${isCompleted ? '#10b981' : isUnlocked ? '#6366f1' : '#6b7280'}" 
+                        <g class="skill-node cursor-pointer" 
+                           onclick="openSkillFromMap(${skill.id})" 
+                           onmouseover="playSound('mapHover')">
+                            
+                            <!-- Outer glow ring -->
+                            <circle cx="${pos.x}" cy="${pos.y}" r="35" 
+                                    fill="none" stroke="${glowColor}" stroke-width="2" opacity="0.3">
+                                ${isCompleted ? '<animate attributeName="r" values="35;45;35" dur="2s" repeatCount="indefinite"/>' : ''}
+                                ${isCompleted ? '<animate attributeName="opacity" values="0.3;0.7;0.3" dur="2s" repeatCount="indefinite"/>' : ''}
+                            </circle>
+                            
+                            <!-- Main skill node -->
+                            <circle cx="${pos.x}" cy="${pos.y}" r="28" 
+                                    fill="${nodeColor}" 
                                     stroke="${isCompleted ? '#059669' : isUnlocked ? '#4f46e5' : '#4b5563'}" 
-                                    stroke-width="3" 
-                                    class="transition-all duration-300 hover:r-30" />
-                            <text x="${pos.x}" y="${pos.y + 5}" text-anchor="middle" 
-                                  font-size="20" fill="white">${skill.icon}</text>
-                            <text x="${pos.x}" y="${pos.y + 45}" text-anchor="middle" 
-                                  font-size="12" fill="white" font-weight="bold">${getSkillTranslation(skill.id, 'name')}</text>
-                            ${isCompleted ? `<text x="${pos.x + 20}" y="${pos.y - 20}" font-size="16" fill="#10b981">✓</text>` : ''}
+                                    stroke-width="4" 
+                                    ${isCompleted ? 'filter="url(#glow)"' : ''}
+                                    class="transition-all duration-300">
+                                ${isUnlocked ? '<animate attributeName="r" values="28;32;28" dur="4s" repeatCount="indefinite"/>' : ''}
+                            </circle>
+                            
+                            <!-- Skill icon with floating animation -->
+                            <text x="${pos.x}" y="${pos.y + 6}" text-anchor="middle" 
+                                  font-size="24" fill="white" font-weight="bold">${skill.icon}
+                                ${isCompleted ? '<animateTransform attributeName="transform" type="rotate" values="0 ' + pos.x + ' ' + pos.y + ';360 ' + pos.x + ' ' + pos.y + '" dur="10s" repeatCount="indefinite"/>' : ''}
+                            </text>
+                            
+                            <!-- Skill name with background -->
+                            <rect x="${pos.x - 40}" y="${pos.y + 40}" width="80" height="20" 
+                                  rx="10" fill="rgba(0,0,0,0.7)" stroke="${nodeColor}" stroke-width="1"/>
+                            <text x="${pos.x}" y="${pos.y + 53}" text-anchor="middle" 
+                                  font-size="11" fill="white" font-weight="bold">${getSkillTranslation(skill.id, 'name')}</text>
+                            
+                            <!-- Completion badge -->
+                            ${isCompleted ? `
+                                <circle cx="${pos.x + 20}" cy="${pos.y - 20}" r="8" fill="#10b981" stroke="#059669" stroke-width="2"/>
+                                <text x="${pos.x + 20}" y="${pos.y - 16}" text-anchor="middle" font-size="12" fill="white">✓</text>
+                            ` : ''}
+                            
+                            <!-- Lock icon for locked skills -->
+                            ${!isUnlocked ? `
+                                <circle cx="${pos.x + 20}" cy="${pos.y - 20}" r="8" fill="#6b7280" stroke="#4b5563" stroke-width="2"/>
+                                <text x="${pos.x + 20}" y="${pos.y - 16}" text-anchor="middle" font-size="10" fill="white">🔒</text>
+                            ` : ''}
+                            
+                            <!-- Floating particles for completed skills -->
+                            ${isCompleted ? `
+                                <circle cx="${pos.x - 15}" cy="${pos.y - 15}" r="2" fill="#FCD34D" opacity="0.8">
+                                    <animate attributeName="cy" values="${pos.y - 15};${pos.y - 35};${pos.y - 15}" dur="3s" repeatCount="indefinite"/>
+                                    <animate attributeName="opacity" values="0.8;0.2;0.8" dur="3s" repeatCount="indefinite"/>
+                                </circle>
+                                <circle cx="${pos.x + 15}" cy="${pos.y - 10}" r="1.5" fill="#34D399" opacity="0.6">
+                                    <animate attributeName="cy" values="${pos.y - 10};${pos.y - 30};${pos.y - 10}" dur="4s" repeatCount="indefinite"/>
+                                    <animate attributeName="opacity" values="0.6;0.1;0.6" dur="4s" repeatCount="indefinite"/>
+                                </circle>
+                            ` : ''}
                         </g>
                     `;
                 }
@@ -1625,27 +1804,60 @@
             
             return nodes;
         }
+        
+        function renderWeatherEffects() {
+            let effects = '';
+            
+            // Floating clouds
+            for (let i = 0; i < 3; i++) {
+                const x = 100 + i * 250;
+                const y = 50 + Math.random() * 100;
+                effects += `
+                    <ellipse cx="${x}" cy="${y}" rx="40" ry="15" fill="rgba(255,255,255,0.1)">
+                        <animateTransform attributeName="transform" type="translate" 
+                                        values="0,0;100,0;0,0" dur="${20 + i * 5}s" repeatCount="indefinite"/>
+                    </ellipse>
+                `;
+            }
+            
+            // Twinkling stars
+            for (let i = 0; i < 8; i++) {
+                const x = Math.random() * 800;
+                const y = Math.random() * 200;
+                effects += `
+                    <circle cx="${x}" cy="${y}" r="1" fill="white" opacity="0.6">
+                        <animate attributeName="opacity" values="0.2;1;0.2" dur="${2 + Math.random() * 3}s" repeatCount="indefinite"/>
+                    </circle>
+                `;
+            }
+            
+            return effects;
+        }
 
         function getSkillPositions() {
+            // Positioned to match terrain features
             return {
-                1: {x: 150, y: 150}, // Communication
-                2: {x: 350, y: 120}, // Teamwork  
-                3: {x: 250, y: 250}, // Emotional Intelligence
-                4: {x: 450, y: 200}, // Problem-Solving
-                5: {x: 550, y: 150}, // Time Management
-                6: {x: 650, y: 250}, // Critical Thinking
-                7: {x: 400, y: 350}, // Leadership
-                8: {x: 200, y: 400}, // Adaptability
-                9: {x: 600, y: 400}  // Innovation
+                1: {x: 150, y: 180}, // Communication - Forest area
+                2: {x: 320, y: 140}, // Teamwork - Forest edge
+                3: {x: 220, y: 280}, // Emotional Intelligence - Deep forest
+                4: {x: 420, y: 220}, // Problem-Solving - Forest/mountain border
+                5: {x: 520, y: 160}, // Time Management - Mountain foothills
+                6: {x: 580, y: 280}, // Critical Thinking - Mountain area
+                7: {x: 380, y: 380}, // Leadership - Central valley
+                8: {x: 180, y: 450}, // Adaptability - Floating island
+                9: {x: 580, y: 420}  // Innovation - Mountain peak floating island
             };
         }
 
         function openSkillFromMap(skillId) {
-            playSound('click');
             const skill = skillsData.find(s => s.id === skillId);
             if (skill && isSkillUnlocked(skill)) {
+                playSound('pathUnlock');
+                createMapParticles();
                 showPage('game');
                 setTimeout(() => openSkillModal(skill), 300);
+            } else {
+                playSound('wrong');
             }
         }
 
